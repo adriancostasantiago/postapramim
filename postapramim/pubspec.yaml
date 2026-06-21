@@ -1,0 +1,55 @@
+name: posta_pra_mim
+description: "Logística inteligente e simplificada — Posta Pra Mim."
+publish_to: "none"
+version: 1.2.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.1.2
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Networking & data
+  http: ^1.2.2
+
+  # Secure storage (tokens/credentials — never plaintext)
+  flutter_secure_storage: ^9.2.2
+
+  # Login social com Google. Descomente e rode `flutter pub get` ao
+  # configurar a integração real (ver lib/data/datasources/
+  # google_auth_datasource.dart para instruções completas).
+  # google_sign_in: ^6.2.1
+
+  # Value equality without boilerplate
+  equatable: ^2.0.5
+
+  # Logging (replaces print())
+  logging: ^1.2.0
+
+  # Network image caching
+  cached_network_image: ^3.4.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Strict lint set (see analysis_options.yaml)
+  flutter_lints: ^4.0.0
+
+  # Mocking for unit tests
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
