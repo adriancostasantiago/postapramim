@@ -101,14 +101,14 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primaryYellow,
         foregroundColor: AppColors.onSurface,
-        onPressed: () => _showPlaceholderSnackBar('Novo pedido em breve.'),
+        onPressed: () => context.push('/manager/pedido/novo'),
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: ManagerBottomNav(
         currentIndex: _bottomNavIndex,
         onTap: (index) {
           setState(() => _bottomNavIndex = index);
-          _showPlaceholderSnackBar('Navegação em breve.');
+          context.push('/manager/pedido/novo');
         },
       ),
     );

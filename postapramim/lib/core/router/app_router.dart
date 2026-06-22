@@ -3,6 +3,7 @@ import 'package:posta_pra_mim/core/router/app_routes.dart';
 import 'package:posta_pra_mim/presentation/home/home_page.dart';
 import 'package:posta_pra_mim/presentation/login/login_page.dart';
 import 'package:posta_pra_mim/presentation/manager_dashboard/manager_dashboard_page.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/novo_pedido_page.dart';
 import 'package:posta_pra_mim/presentation/pedido_detalhe/pedido_detalhe_page.dart';
 import 'package:posta_pra_mim/presentation/register/register_page.dart';
 import 'package:posta_pra_mim/presentation/splash/splash_page.dart';
@@ -36,6 +37,10 @@ GoRouter buildAppRouter() {
       GoRoute(
         path: AppRoutes.managerDashboard,
         builder: (context, state) => const ManagerDashboardPage(),
+      ),
+      GoRoute(
+        path: '/manager/pedido/novo',
+        builder: (_, __) => const NovoPedidoPage(),
       ),
       GoRoute(
         path: AppRoutes.pedidoDetalhe,
