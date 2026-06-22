@@ -5,62 +5,76 @@ import 'package:posta_pra_mim/domain/entities/pedido.dart';
 import 'package:posta_pra_mim/domain/entities/pedido_status.dart';
 import 'package:posta_pra_mim/presentation/manager_dashboard/widgets/status_badge.dart';
 
-/// Card de pedido na lista "Pedidos Recentes". A ação principal do
-/// rodapé varia conforme o status (Aprovar / Rastrear / Detalhes) —
-/// decidido aqui via switch exaustivo sobre [PedidoStatus], nunca via
-/// booleans soltos.
+/// Card de pedido na lista "Pedidos Recentes". Tocar em qualquer
+/// ponto do card (onTap) abre a tela de detalhes do pedido; a ação
+/// principal do rodapé varia conforme o status (Aprovar / Rastrear /
+/// Detalhes) — decidido aqui via switch exaustivo sobre
+/// [PedidoStatus], nunca via booleans soltos.
 class PedidoCard extends StatelessWidget {
   const PedidoCard({
     required this.pedido,
     required this.onPrimaryAction,
     required this.onMoreOptions,
+    this.onTap,
     super.key,
   });
 
   final Pedido pedido;
   final VoidCallback onPrimaryAction;
   final VoidCallback onMoreOptions;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PedidoCardHeader(pedido: pedido),
-          const SizedBox(height: 12),
-          _PedidoCardInfoRow(
-            icon: Icons.location_on_outlined,
-            text: pedido.endereco,
-          ),
-          const SizedBox(height: 6),
-          _PedidoCardInfoRow(
-            icon: Icons.payments_outlined,
-            text: 'Valor do pagamento',
-            trailing: Text(
-              '${CurrencyFormatter.format(pedido.valor)} • ${pedido.formaPagamento.label}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: pedido.formaPagamento.isPago
-                    ? const Color(0xFF0A7D3F)
-                    : const Color(0xFFB8860B),
-              ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
-          const SizedBox(height: 16),
-          _PedidoCardActionRow(
-            pedido: pedido,
-            onPrimaryAction: onPrimaryAction,
-            onMoreOptions: onMoreOptions,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PedidoCardHeader(pedido: pedido),
+              const SizedBox(height: 12),
+              _PedidoCardInfoRow(
+                icon: Icons.location_on_outlined,
+                text: pedido.endereco,
+              ),
+              const SizedBox(height: 6),
+              _PedidoCardInfoRow(
+                icon: Icons.payments_outlined,
+                text: 'Valor',
+                trailing: Text(
+                  '${CurrencyFormatter.format(pedido.valor)} • '
+                  '${pedido.formaPagamento.label}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: pedido.formaPagamento.isPago
+                        ? const Color(0xFF0A7D3F)
+                        : const Color(0xFFB8860B),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _PedidoCardActionRow(
+                pedido: pedido,
+                onPrimaryAction: onPrimaryAction,
+                onMoreOptions: onMoreOptions,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -92,7 +106,7 @@ class _PedidoCardHeader extends StatelessWidget {
               Text(
                 pedido.clienteNome,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
                 ),
@@ -131,7 +145,8 @@ class _PedidoCardInfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.onSurfaceVariant.withValues(alpha: 0.6)),
+        Icon(icon,
+            size: 16, color: AppColors.onSurfaceVariant.withValues(alpha: 0.6)),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
@@ -173,7 +188,7 @@ class _PedidoCardActionRow extends StatelessWidget {
           isFilled: true,
         ),
       PedidoStatus.despachado => (
-          label: 'Rastrear Pacote',
+          label: 'Detalhes',
           icon: Icons.print_outlined,
           isFilled: false,
         ),
@@ -182,7 +197,7 @@ class _PedidoCardActionRow extends StatelessWidget {
           icon: Icons.chevron_right,
           isFilled: false,
         ),
-      PedidoStatus.entregue => (
+      PedidoStatus.finalizado => (
           label: 'Detalhes',
           icon: Icons.chevron_right,
           isFilled: false,

@@ -1,4 +1,5 @@
 import 'package:posta_pra_mim/domain/entities/pedido.dart';
+import 'package:posta_pra_mim/domain/entities/pedido_detalhe.dart';
 import 'package:posta_pra_mim/domain/entities/pedido_status.dart';
 
 /// Contrato de acesso a dados de pedidos. Implementações concretas
@@ -20,4 +21,9 @@ abstract interface class PedidoRepository {
     required String pedidoId,
     required PedidoStatus novoStatus,
   });
+
+  /// Retorna os dados completos de um pedido para a tela de detalhes
+  /// (destinatário, carga, financeiro, documentos e localização).
+  /// Lança `UnknownFailure` se o pedido não existir.
+  Future<PedidoDetalhe> getPedidoDetalhe(String pedidoId);
 }

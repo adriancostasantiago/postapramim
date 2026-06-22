@@ -34,7 +34,7 @@ class ManagerDashboardAppBar extends StatelessWidget
         tooltip: 'Menu',
       ),
       title: const Text(
-        'Despacho Correios',
+        'POSTA PRA MIM',
         style: TextStyle(
           color: AppColors.onSurface,
           fontSize: 17,

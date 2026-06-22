@@ -13,6 +13,8 @@ import 'package:posta_pra_mim/presentation/shared/state/auth_controller.dart';
 import 'package:posta_pra_mim/presentation/shared/state/auth_state.dart';
 import 'package:posta_pra_mim/presentation/shared/state/pedidos_controller.dart';
 import 'package:posta_pra_mim/presentation/shared/state/pedidos_state.dart';
+import 'package:go_router/go_router.dart';
+import 'package:posta_pra_mim/core/router/app_routes.dart';
 
 /// Dashboard do gestor — métricas, busca, filtros e lista de pedidos
 /// recentes. Não chama rede/IO diretamente: delega tudo ao
@@ -37,7 +39,8 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   }
 
   void _showPlaceholderSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -86,8 +89,10 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                   ),
                   onFilterTap: () =>
                       _showPlaceholderSnackBar('Filtros avançados em breve.'),
-                  onDateTap: () => _showPlaceholderSnackBar('Filtro de data em breve.'),
-                  onCityTap: () => _showPlaceholderSnackBar('Filtro de cidade em breve.'),
+                  onDateTap: () =>
+                      _showPlaceholderSnackBar('Filtro de data em breve.'),
+                  onCityTap: () =>
+                      _showPlaceholderSnackBar('Filtro de cidade em breve.'),
                 ),
             };
           },
@@ -148,7 +153,8 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            ElevatedButton(
+                onPressed: onRetry, child: const Text('Tentar novamente')),
           ],
         ),
       ),
@@ -211,7 +217,7 @@ class _DashboardContent extends StatelessWidget {
                     const SizedBox(width: 8),
                     FilterChipButton(
                       icon: Icons.location_city_outlined,
-                      label: 'Cid',
+                      label: 'Cidade',
                       onTap: onCityTap,
                     ),
                   ],
@@ -237,7 +243,8 @@ class _DashboardContent extends StatelessWidget {
                 TextButton(
                   onPressed: () {},
                   style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                  child: const Text('Ver todos', style: TextStyle(fontSize: 13)),
+                  child:
+                      const Text('Ver todos', style: TextStyle(fontSize: 13)),
                 ),
               ],
             ),
@@ -258,6 +265,8 @@ class _DashboardContent extends StatelessWidget {
                 final pedido = pedidos[index];
                 return PedidoCard(
                   pedido: pedido,
+                  onTap: () =>
+                      context.push(AppRoutes.pedidoDetalhePath(pedido.id)),
                   onPrimaryAction: () => _handlePrimaryAction(pedido),
                   onMoreOptions: () => onMoreOptions(pedido),
                 );
@@ -275,7 +284,7 @@ class _DashboardContent extends StatelessWidget {
         onApprove(pedido);
       case PedidoStatus.despachado:
       case PedidoStatus.emTransito:
-      case PedidoStatus.entregue:
+      case PedidoStatus.finalizado:
       case PedidoStatus.cancelado:
         onSecondaryAction(pedido);
     }

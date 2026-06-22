@@ -13,6 +13,14 @@ abstract final class AppRoutes {
 
   static const String managerDashboard = '/manager/dashboard';
 
+  /// Rota de detalhes de um pedido — recebe o id via path param `:id`.
+  static const String pedidoDetalhe = '/manager/pedido/:id';
+
+  /// Monta o caminho concreto de [pedidoDetalhe] para um pedido
+  /// específico (ex: `pedidoDetalhePath('123')` → `/manager/pedido/123`).
+  static String pedidoDetalhePath(String pedidoId) =>
+      '/manager/pedido/$pedidoId';
+
   /// Resolve a rota inicial pós-login com base na role do usuário.
   /// Cliente final e despachador ainda usam [home] como placeholder
   /// até suas telas dedicadas serem implementadas.

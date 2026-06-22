@@ -96,7 +96,8 @@ final class AppProviders extends StatelessWidget {
           create: (_) => MockPedidoRepository(),
         ),
         Provider<GetPedidosResumoUseCase>(
-          create: (ctx) => GetPedidosResumoUseCase(ctx.read<PedidoRepository>()),
+          create: (ctx) =>
+              GetPedidosResumoUseCase(ctx.read<PedidoRepository>()),
         ),
         Provider<GetPedidosRecentesUseCase>(
           create: (ctx) =>
@@ -105,6 +106,13 @@ final class AppProviders extends StatelessWidget {
         Provider<AtualizarStatusPedidoUseCase>(
           create: (ctx) =>
               AtualizarStatusPedidoUseCase(ctx.read<PedidoRepository>()),
+        ),
+        // Use case stateless — o controller de detalhes (escopo por
+        // pedidoId) é instanciado localmente pela própria página, ver
+        // `pedido_detalhe_page.dart`.
+        Provider<GetPedidoDetalheUseCase>(
+          create: (ctx) =>
+              GetPedidoDetalheUseCase(ctx.read<PedidoRepository>()),
         ),
         ChangeNotifierProvider<PedidosController>(
           create: (ctx) => PedidosController(

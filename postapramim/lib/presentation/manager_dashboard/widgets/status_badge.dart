@@ -25,7 +25,7 @@ class StatusBadge extends StatelessWidget {
             background: const Color(0xFFE3EEFB),
             foreground: const Color(0xFF0A5FAC),
           ),
-        PedidoStatus.entregue => (
+        PedidoStatus.finalizado => (
             background: const Color(0xFFE3F5EA),
             foreground: const Color(0xFF0A7D3F),
           ),

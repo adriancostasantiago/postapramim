@@ -10,7 +10,7 @@ enum PedidoStatus {
   aprovado,
   despachado,
   emTransito,
-  entregue,
+  finalizado,
   cancelado;
 
   String get label => switch (this) {
@@ -18,7 +18,7 @@ enum PedidoStatus {
         PedidoStatus.aprovado => 'Aprovado',
         PedidoStatus.despachado => 'Despachado',
         PedidoStatus.emTransito => 'Em Trânsito',
-        PedidoStatus.entregue => 'Entregue',
+        PedidoStatus.finalizado => 'Finalizado',
         PedidoStatus.cancelado => 'Cancelado',
       };
 }

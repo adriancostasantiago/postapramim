@@ -1,4 +1,5 @@
 import 'package:posta_pra_mim/domain/entities/pedido.dart';
+import 'package:posta_pra_mim/domain/entities/pedido_detalhe.dart';
 import 'package:posta_pra_mim/domain/entities/pedido_status.dart';
 import 'package:posta_pra_mim/domain/repositories/pedido_repository.dart';
 
@@ -36,5 +37,16 @@ final class AtualizarStatusPedidoUseCase {
       pedidoId: pedidoId,
       novoStatus: novoStatus,
     );
+  }
+}
+
+/// Busca os dados completos de um pedido para a tela de detalhes.
+final class GetPedidoDetalheUseCase {
+  const GetPedidoDetalheUseCase(this._repository);
+
+  final PedidoRepository _repository;
+
+  Future<PedidoDetalhe> call(String pedidoId) {
+    return _repository.getPedidoDetalhe(pedidoId);
   }
 }

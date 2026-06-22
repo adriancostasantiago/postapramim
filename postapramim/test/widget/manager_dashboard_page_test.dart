@@ -92,7 +92,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Despacho Correios'), findsOneWidget);
+      expect(find.text('POSTA PRA MIM'), findsOneWidget);
       expect(find.text('Total Pedidos'), findsOneWidget);
       expect(find.text('1284'), findsOneWidget);
       expect(find.text('Pedidos Recentes'), findsOneWidget);
