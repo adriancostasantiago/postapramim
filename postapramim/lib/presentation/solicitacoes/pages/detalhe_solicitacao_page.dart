@@ -463,12 +463,8 @@ class _CartaoInfo extends StatelessWidget {
   final Widget? acao;
   final VoidCallback? onTap;
 
-  const _CartaoInfo({
-    required this.icone,
-    required this.conteudo,
-    this.acao,
-    this.onTap,
-  });
+  const _CartaoInfo({required this.icone, required this.conteudo, this.acao})
+    : onTap = null;
 
   @override
   Widget build(BuildContext context) {

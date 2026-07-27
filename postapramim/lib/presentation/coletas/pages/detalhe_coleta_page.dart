@@ -36,7 +36,7 @@ class DetalheColetaPage extends ConsumerWidget {
     // Enquanto carrega (ou em caso de erro) mantém o fundo neutro; assim
     // que a solicitação chega, a tela inteira assume o tom do status
     // atual (mesmo balde de cor usado nos cards do Dashboard).
-    final grupo = async.maybeWhen(
+    async.maybeWhen(
       data: (result) => result.fold(
         onSuccess: (s) => s.status.grupoExibicao,
         onFailure: (_) => null,
@@ -249,7 +249,7 @@ class _StatusDaColetaCard extends StatelessWidget {
 
   // final status = solicitacao.status;
 
-  static const _etapas = [
+  static final _etapas = [
     (
       label: 'Realizada',
       icone: Icons.handshake_outlined,
@@ -497,8 +497,7 @@ class _CartaoInfo extends StatelessWidget {
     required this.cor,
     required this.conteudo,
     this.acao,
-    this.onTap,
-  });
+  }) : onTap = null;
 
   @override
   Widget build(BuildContext context) {
@@ -582,8 +581,6 @@ class _ColetadorCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meuId = ref.watch(authControllerProvider).usuario?.id;
-    final souEu = meuId == coletadorId;
     final async = ref.watch(usuarioPublicoProvider(coletadorId));
 
     return _CartaoInfo(
@@ -823,25 +820,6 @@ class _BotoesAcao extends ConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-/// Cor por balde de status (mesmo esquema usado na Home do cliente e no
-/// dashboard do coletador — ver `GrupoStatusExibicaoUiX` em
-/// `cliente_home_page.dart`). Redefinido aqui localmente para não depender
-/// de uma extension de outra tela.
-Color _corDoGrupo(GrupoStatusExibicao grupo) {
-  switch (grupo) {
-    case GrupoStatusExibicao.realizada:
-      return AppColors.cinzaTexto;
-    case GrupoStatusExibicao.coleta:
-      return AppColors.amarelo;
-    case GrupoStatusExibicao.emtransito:
-      return AppColors.azulInstitucional;
-    case GrupoStatusExibicao.concluida:
-      return Colors.green;
-    case GrupoStatusExibicao.cancelada:
-      return AppColors.erro;
   }
 }
 

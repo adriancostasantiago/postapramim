@@ -56,6 +56,13 @@ extension StatusSolicitacaoX on StatusSolicitacao {
   };
 }
 
+void testeStatusSolicitacao() {
+  final status = StatusSolicitacao.concluida;
+
+  print(status.label);
+  print(status.valorBanco);
+}
+
 class AppConstants {
   AppConstants._();
 

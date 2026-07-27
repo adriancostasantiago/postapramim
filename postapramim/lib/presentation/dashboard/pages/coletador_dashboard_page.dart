@@ -10,6 +10,7 @@ import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_pro
 import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:postapramim/shared/widgets/app_drawer.dart';
 
 /// Painel principal do coletador.
 ///
@@ -30,6 +31,7 @@ class ColetadorDashboardPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.amareloClaro,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: solicitacoesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -218,7 +220,9 @@ class _Cabecalho extends StatelessWidget {
                   // TODO: abrir o Drawer/menu lateral quando existir.
                   IconButton(
                     icon: const Icon(Icons.menu, color: AppColors.darkFundo),
-                    onPressed: () {},
+                    onPressed: () => Scaffold.of(
+                      context,
+                    ).openDrawer(), // era onPressed: () {}
                   ),
                   Row(
                     children: [

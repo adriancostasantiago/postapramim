@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/core/constants/app_constants.dart';
 import 'package:postapramim/core/services/supabase_service.dart';
+import 'package:postapramim/presentation/ajuda/pages/ajuda_page.dart';
 import 'package:postapramim/presentation/auth/providers/auth_providers.dart';
 import 'package:postapramim/presentation/auth/pages/splash_page.dart';
 import 'package:postapramim/presentation/auth/pages/boas_vindas_page.dart';
@@ -146,6 +147,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             EnderecoFormPage(enderecoExistente: state.extra as EnderecoResumo?),
       ),
+      GoRoute(path: RoutePaths.ajuda, builder: (_, __) => const AjudaPage()),
     ],
   );
 });

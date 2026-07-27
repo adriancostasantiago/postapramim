@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:postapramim/app/router/route_paths.dart';
+import 'package:postapramim/app/theme/app_colors.dart';
+import 'package:postapramim/core/utils/validators.dart';
 import 'package:postapramim/presentation/auth/providers/auth_providers.dart';
+import 'package:postapramim/presentation/enderecos/providers/enderecos_providers.dart';
+import 'package:postapramim/presentation/perfil/providers/perfil_providers.dart';
 import 'package:postapramim/shared/widgets/app_button.dart';
 import 'package:postapramim/shared/widgets/app_text_field.dart';
 
@@ -12,6 +18,7 @@ class EditarPerfilPage extends ConsumerStatefulWidget {
 }
 
 class _EditarPerfilPageState extends ConsumerState<EditarPerfilPage> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nomeCtrl;
   late final TextEditingController _telefoneCtrl;
 
@@ -30,28 +37,105 @@ class _EditarPerfilPageState extends ConsumerState<EditarPerfilPage> {
     super.dispose();
   }
 
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+    final usuario = ref.read(authControllerProvider).usuario;
+    if (usuario == null) return;
+
+    final ok = await ref
+        .read(perfilFormControllerProvider.notifier)
+        .salvar(
+          usuarioId: usuario.id,
+          nome: _nomeCtrl.text.trim(),
+          telefone: _telefoneCtrl.text.trim(),
+        );
+
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+      );
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final formState = ref.watch(perfilFormControllerProvider);
+    final usuario = ref.watch(authControllerProvider).usuario;
+    final enderecoAsync = usuario == null
+        ? null
+        : ref.watch(enderecoPrincipalClienteProvider(usuario.id));
+
     return Scaffold(
       appBar: AppBar(title: const Text('Editar perfil')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppTextField(label: 'Nome', controller: _nomeCtrl),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: 'Telefone',
-              controller: _telefoneCtrl,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 24),
-            // Persistência via `perfil` feature: UpdateProfileUsecase ->
-            // PerfilRepository -> update em `usuarios` + upload de avatar
-            // no bucket `avatares` (Supabase Storage), mesmo padrão do auth.
-            AppButton(label: 'Salvar alterações', onPressed: () {}),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppTextField(
+                label: 'Nome',
+                controller: _nomeCtrl,
+                validator: (v) => Validators.obrigatorio(v, campo: 'Nome'),
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Telefone',
+                controller: _telefoneCtrl,
+                keyboardType: TextInputType.phone,
+                validator: Validators.telefone,
+              ),
+              const SizedBox(height: 24),
+              AppButton(
+                label: 'Salvar alterações',
+                carregando: formState.carregando,
+                onPressed: _salvar,
+              ),
+              if (formState.erro != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  formState.erro!,
+                  style: const TextStyle(color: AppColors.erro),
+                ),
+              ],
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 12),
+              const Text(
+                'Endereço',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              if (enderecoAsync != null)
+                enderecoAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const Text('Erro ao carregar endereço'),
+                  data: (endereco) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.location_on_outlined),
+                    title: Text(
+                      endereco?.enderecoFormatado ??
+                          'Nenhum endereço cadastrado',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      final resultado = await context.push<bool>(
+                        RoutePaths.clienteEnderecoForm,
+                        extra: endereco,
+                      );
+                      if (resultado == true) {
+                        ref.invalidate(
+                          enderecoPrincipalClienteProvider(usuario!.id),
+                        );
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

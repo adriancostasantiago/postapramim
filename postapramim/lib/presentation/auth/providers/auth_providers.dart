@@ -72,6 +72,8 @@ class AuthControllerNotifier extends _$AuthControllerNotifier {
     return AuthState.inicial;
   }
 
+  Future<void> recarregar() => _carregarUsuarioAtual();
+
   Future<void> _carregarUsuarioAtual() async {
     final result = await ref.read(getCurrentUserUsecaseProvider)();
     result.fold(

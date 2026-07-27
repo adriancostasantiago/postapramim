@@ -10,6 +10,7 @@ import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart
 import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_providers.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
+import 'package:postapramim/shared/widgets/app_drawer.dart';
 
 class ClienteHomePage extends ConsumerWidget {
   const ClienteHomePage({super.key});
@@ -27,6 +28,7 @@ class ClienteHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: _corFundo,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: solicitacoesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -134,6 +136,10 @@ class _Cabecalho extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        IconButton(
+          icon: const Icon(Icons.menu, color: AppColors.preto),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
         Image.asset('assets/images/logo.png', height: 36),
         const Spacer(),
         CircleAvatar(
