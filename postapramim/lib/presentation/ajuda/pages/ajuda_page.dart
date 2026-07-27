@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:postapramim/app/router/route_paths.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
@@ -37,7 +39,15 @@ class AjudaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajuda')),
+      backgroundColor: AppColors.branco,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: AppColors.preto),
+        title: Text(
+          'Ajuda',
+          style: AppTextStyles.titulo.copyWith(color: AppColors.preto),
+        ),
+        backgroundColor: AppColors.branco,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -97,6 +107,62 @@ class AjudaPage extends StatelessWidget {
             resposta:
                 'Na tela inicial ou em "Solicitações" você vê o status atualizado '
                 'em tempo real de cada devolução.',
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: AppColors.branco,
+        indicatorColor: AppColors.amarelo,
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTextStyles.legenda.copyWith(
+              color: AppColors.amarelo,
+              fontWeight: FontWeight.bold,
+            );
+          }
+
+          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+        }),
+        selectedIndex: 2,
+        onDestinationSelected: (i) {
+          switch (i) {
+            case 0:
+              context.push(RoutePaths.coletadorDashboard);
+              break;
+            case 1:
+              context.push(RoutePaths.coletadorMinhasColetas);
+              break;
+            // case 2:
+            //   context.push(RoutePaths.coletadorMapaRota);
+            //   break;
+            // case 2:
+            //   context.push(RoutePaths.ajuda);
+            //   break;
+            case 3:
+              context.push(RoutePaths.perfil);
+              break;
+          }
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined, color: AppColors.cinzaTexto),
+            label: 'Início',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
+            label: 'Solicitações',
+          ),
+          // NavigationDestination(
+          //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
+          //   label: 'Rotas',
+          // ),
+          NavigationDestination(
+            icon: Icon(Icons.help_outline, color: AppColors.branco),
+            label: 'Ajuda',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
+            label: 'Conta',
           ),
         ],
       ),

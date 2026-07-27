@@ -139,6 +139,25 @@ class _CabecalhoDetalhe extends StatelessWidget {
   final SolicitacaoEntity solicitacao;
   const _CabecalhoDetalhe({required this.solicitacao});
 
+  String getStatusImage(StatusSolicitacao status) {
+    switch (status) {
+      case StatusSolicitacao.solicitacaoRealizada:
+        return 'assets/images/ilustracao_detalhe_solicitacao_realizada.png';
+
+      case StatusSolicitacao.aguardandoColeta:
+        return 'assets/images/ilustracao_detalhe_solicitacao.png';
+
+      case StatusSolicitacao.emTransito:
+        return 'assets/images/ilustracao_detalhe_solicitacao_em_transito.png';
+
+      case StatusSolicitacao.concluida:
+        return 'assets/images/ilustracao_detalhe_solicitacao_concluida.png';
+
+      case StatusSolicitacao.cancelada:
+        return 'assets/images/ilustracao_detalhe_solicitacao_cancelada.png';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = solicitacao.status;
@@ -150,16 +169,13 @@ class _CabecalhoDetalhe extends StatelessWidget {
           width: double.infinity,
           height: 230,
           color:
-              Colors.transparent, // deixa o fundo colorido do Scaffold aparecer
+              AppColors.branco, // deixa o fundo colorido do Scaffold aparecer
         ),
         Positioned(
           top: 60,
           right: 0,
           child: IgnorePointer(
-            child: Image.asset(
-              'assets/images/ilustracao_detalhe_solicitacao.png',
-              height: 200,
-            ),
+            child: Image.asset(getStatusImage(solicitacao.status), height: 200),
           ),
         ),
         SafeArea(

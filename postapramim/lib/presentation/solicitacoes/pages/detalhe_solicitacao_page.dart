@@ -47,7 +47,7 @@ class DetalheSolicitacaoPage extends ConsumerWidget {
         : _corDoGrupo(grupo).withValues(alpha: .10);
 
     return Scaffold(
-      backgroundColor: corFundo,
+      backgroundColor: AppColors.branco,
       body: async.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) =>

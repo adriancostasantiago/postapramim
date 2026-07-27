@@ -2,38 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
 import 'package:postapramim/core/utils/formatters.dart';
+import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
+import 'package:postapramim/presentation/widgets/campo_busca.dart';
 
 class FiltroSolicitacoes {
   final DateTimeRange? periodo;
   final GrupoStatusExibicao? status;
+  final String busca;
 
-  const FiltroSolicitacoes({this.periodo, this.status});
+  const FiltroSolicitacoes({this.periodo, this.status, this.busca = ''});
 
   FiltroSolicitacoes copyWith({
     DateTimeRange? periodo,
     bool limparPeriodo = false,
     GrupoStatusExibicao? status,
     bool limparStatus = false,
+    String? busca,
   }) {
     return FiltroSolicitacoes(
       periodo: limparPeriodo ? null : (periodo ?? this.periodo),
       status: limparStatus ? null : (status ?? this.status),
+      busca: busca ?? this.busca,
     );
   }
 }
 
-/// Barra de filtro: campo de período (ex.: "01/01/2026 até 10/02/2026")
-/// + chips de status em pílula (mesmo padrão visual pedido — chip
-/// selecionado preenchido, os demais neutros).
+/// Barra de busca + filtro: campo de pesquisa (código/cliente), campo de
+/// período e chips de status em pílula.
 class FiltroSolicitacoesBar extends StatelessWidget {
   final FiltroSolicitacoes filtro;
   final ValueChanged<FiltroSolicitacoes> onChanged;
+
+  /// Texto de dica do campo de busca. Ex.: "Pesquisar por código" (fluxo
+  /// do cliente) ou "Pesquisar por código ou cliente" (fluxo do
+  /// coletador).
+  final String hintBusca;
 
   const FiltroSolicitacoesBar({
     super.key,
     required this.filtro,
     required this.onChanged,
+    this.hintBusca = 'Pesquisar por código ou cliente',
   });
 
   Future<void> _selecionarPeriodo(BuildContext context) async {
@@ -53,6 +63,12 @@ class FiltroSolicitacoesBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        CampoBusca(
+          hint: hintBusca,
+          onChanged: (v) => onChanged(filtro.copyWith(busca: v)),
+          onFiltrar: () => _selecionarPeriodo(context),
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -212,5 +228,20 @@ extension FiltroSolicitacoesX on FiltroSolicitacoes {
       if (criadoEm.isBefore(inicio) || criadoEm.isAfter(fim)) return false;
     }
     return true;
+  }
+
+  /// Verifica se [s] corresponde ao termo digitado no campo de busca.
+  /// Quando [porCliente] é `true` também compara com o nome do cliente
+  /// (fluxo do coletador); caso contrário só compara com o código de
+  /// devolução (fluxo do cliente).
+  bool aceitaBusca(SolicitacaoEntity s, {bool porCliente = false}) {
+    final termo = busca.trim().toLowerCase();
+    if (termo.isEmpty) return true;
+
+    final codigo = (s.codigoDevolucao ?? s.id.substring(0, 8)).toLowerCase();
+    if (codigo.contains(termo)) return true;
+
+    if (porCliente) return s.nomeExibicao.toLowerCase().contains(termo);
+    return false;
   }
 }

@@ -7,23 +7,27 @@ import 'package:postapramim/app/theme/app_text_styles.dart';
 import 'package:postapramim/presentation/auth/providers/auth_providers.dart';
 import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_providers.dart';
-import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
+import 'package:postapramim/presentation/widgets/campo_busca.dart';
+import 'package:postapramim/presentation/widgets/solicitacao_cards.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:postapramim/shared/widgets/app_drawer.dart';
 
 /// Painel principal do coletador.
-///
-/// Mostra TODAS as solicitações do sistema (não só as já atribuídas a este
-/// coletador) — qualquer coletador logado pode ver a demanda em aberto e,
-/// futuramente, aceitar uma coleta. Depende da policy de RLS
-/// `solicitacoes_select_coletador_todas` (ver
-/// sql/schema_patch_dashboard.sql).
-class ColetadorDashboardPage extends ConsumerWidget {
+class ColetadorDashboardPage extends ConsumerStatefulWidget {
   const ColetadorDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ColetadorDashboardPage> createState() =>
+      _ColetadorDashboardPageState();
+}
+
+class _ColetadorDashboardPageState
+    extends ConsumerState<ColetadorDashboardPage> {
+  String _busca = '';
+
+  @override
+  Widget build(BuildContext context) {
     final usuario = ref.watch(authControllerProvider).usuario;
     final primeiroNome = (usuario?.nome ?? '').split(' ').first;
     final solicitacoesAsync = ref.watch(todasSolicitacoesRealtimeProvider);
@@ -41,11 +45,21 @@ class ColetadorDashboardPage extends ConsumerWidget {
           ),
           data: (solicitacoes) {
             final resumo = _ResumoColetas.deLista(solicitacoes);
+
+            // Coletador pesquisa por código OU pelo nome do cliente.
+            final termo = _busca.trim().toLowerCase();
             final proximas = solicitacoes
                 .where(
                   (s) =>
                       s.status.grupoExibicao != GrupoStatusExibicao.cancelada,
                 )
+                .where((s) {
+                  if (termo.isEmpty) return true;
+                  final codigo = (s.codigoDevolucao ?? s.id.substring(0, 8))
+                      .toLowerCase();
+                  return codigo.contains(termo) ||
+                      s.nomeExibicao.toLowerCase().contains(termo);
+                })
                 .take(10)
                 .toList();
 
@@ -61,19 +75,18 @@ class ColetadorDashboardPage extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _ResumoDoDiaCard(resumo: resumo, data: hoje),
-                        const SizedBox(height: 20),
-                        _AcoesRapidas(
-                          onVerRotas: () =>
-                              context.push(RoutePaths.coletadorMapaRota),
-                          onEscanear: () =>
-                              context.push(RoutePaths.coletadorScanner),
-                          // TODO: criar rota dedicada para coleta avulsa iniciada
-                          // pelo próprio coletador, se esse fluxo existir no app.
-                          onNovaColeta: () =>
-                              context.push(RoutePaths.coletadorScanner),
-                          onContatoSuporte: _ligarSuporte,
-                        ),
+                        // const SizedBox(height: 20),
+                        // _AcoesRapidas(
+                        //   onVerRotas: () =>
+                        //       context.push(RoutePaths.coletadorMapaRota),
+                        //   onEscanear: () =>
+                        //       context.push(RoutePaths.coletadorScanner),
+                        //   onNovaColeta: () =>
+                        //       context.push(RoutePaths.coletadorScanner),
+                        //   onContatoSuporte: _ligarSuporte,
+                        // ),
                         const SizedBox(height: 24),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -98,11 +111,16 @@ class ColetadorDashboardPage extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
+                        CampoBusca(
+                          hint: 'Pesquisar por código ou cliente',
+                          onChanged: (v) => setState(() => _busca = v),
+                        ),
+                        const SizedBox(height: 12),
                         if (proximas.isEmpty)
                           const _ListaVazia()
                         else
                           for (final s in proximas) ...[
-                            _ColetaCard(
+                            ColetaCard(
                               solicitacao: s,
                               onTap: () => context.push(
                                 RoutePaths.coletadorDetalheColeta.replaceFirst(
@@ -125,36 +143,54 @@ class ColetadorDashboardPage extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: NavigationBar(
+        backgroundColor: AppColors.branco,
+        indicatorColor: AppColors.amarelo,
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTextStyles.legenda.copyWith(
+              color: AppColors.amarelo,
+              fontWeight: FontWeight.bold,
+            );
+          }
+
+          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+        }),
         selectedIndex: 0,
         onDestinationSelected: (i) {
           switch (i) {
             case 1:
               context.push(RoutePaths.coletadorMinhasColetas);
               break;
+            // case 2:
+            //   context.push(RoutePaths.coletadorMapaRota);
+            //   break;
             case 2:
-              context.push(RoutePaths.coletadorMapaRota);
-              break;
-            case 3:
               context.push(RoutePaths.ajuda);
               break;
-            case 4:
+            case 3:
               context.push(RoutePaths.perfil);
               break;
           }
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
+            icon: Icon(Icons.home_outlined, color: AppColors.branco),
             label: 'Início',
           ),
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
+            icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
             label: 'Solicitações',
           ),
-          NavigationDestination(icon: Icon(Icons.map_outlined), label: 'Rotas'),
-          NavigationDestination(icon: Icon(Icons.help_outline), label: 'Ajuda'),
+          // NavigationDestination(
+          //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
+          //   label: 'Rotas',
+          // ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
+            label: 'Ajuda',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
             label: 'Conta',
           ),
         ],
@@ -163,11 +199,6 @@ class ColetadorDashboardPage extends ConsumerWidget {
   }
 }
 
-/// Liga para o suporte via WhatsApp/telefone.
-///
-/// TODO: substituir o número fixo por uma constante de configuração
-/// (ex.: `AppConstants.telefoneSuporte`), igual ao padrão já usado em
-/// `SolicitarSemCadastroPage.enviarWhatsApp`.
 Future<void> _ligarSuporte() async {
   final uri = Uri.parse('tel:+5575992873792');
   if (!await launchUrl(uri)) {
@@ -175,9 +206,6 @@ Future<void> _ligarSuporte() async {
   }
 }
 
-/// Cabeçalho com faixa em degradê amarelo -> branco, menu, notificações,
-/// avatar e saudação — mesma linguagem visual do banner usado em
-/// `SolicitarSemCadastroPage`.
 class _Cabecalho extends StatelessWidget {
   final String nome;
   const _Cabecalho({required this.nome});
@@ -201,8 +229,6 @@ class _Cabecalho extends StatelessWidget {
           top: 20,
           right: 0,
           child: IgnorePointer(
-            // TODO: trocar pelo asset final da ilustração do caminhão do
-            // dashboard (ex.: 'assets/images/ilustracao_dashboard.png').
             child: Image.asset(
               'assets/images/ilustracao_nova_solicitacao.png',
               height: 200,
@@ -217,12 +243,9 @@ class _Cabecalho extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // TODO: abrir o Drawer/menu lateral quando existir.
                   IconButton(
                     icon: const Icon(Icons.menu, color: AppColors.darkFundo),
-                    onPressed: () => Scaffold.of(
-                      context,
-                    ).openDrawer(), // era onPressed: () {}
+                    onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                   Row(
                     children: [
@@ -588,8 +611,6 @@ class _ResumoItem extends StatelessWidget {
   }
 }
 
-/// Atalhos rápidos, no mesmo espírito de "card com ícone circular" usado
-/// em `SolicitarSemCadastroPage._IconeCircular`.
 class _AcoesRapidas extends StatelessWidget {
   final VoidCallback onVerRotas;
   final VoidCallback onEscanear;
@@ -683,276 +704,6 @@ class _AcaoRapidaItem extends StatelessWidget {
   }
 }
 
-/// UI (labels/cores/ícones) para os baldes de status, no esquema de cores
-/// original do dashboard do coletador.
-extension _GrupoStatusColetaUiX on GrupoStatusExibicao {
-  String get label {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return 'Realizada';
-      case GrupoStatusExibicao.coleta:
-        return 'Aguardando';
-      case GrupoStatusExibicao.emtransito:
-        return 'Em andamento';
-      case GrupoStatusExibicao.concluida:
-        return 'Concluída';
-      case GrupoStatusExibicao.cancelada:
-        return 'Cancelada';
-    }
-  }
-
-  Color get cor {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return AppColors.cinzaTexto;
-      case GrupoStatusExibicao.coleta:
-        return AppColors.alerta;
-      case GrupoStatusExibicao.emtransito:
-        return AppColors.azulInstitucional;
-      case GrupoStatusExibicao.concluida:
-        return AppColors.sucesso;
-      case GrupoStatusExibicao.cancelada:
-        return AppColors.erro;
-    }
-  }
-
-  IconData get icone {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return Icons.handshake_outlined;
-      case GrupoStatusExibicao.coleta:
-        return Icons.inventory_2_outlined;
-      case GrupoStatusExibicao.emtransito:
-        return Icons.local_shipping_outlined;
-      case GrupoStatusExibicao.concluida:
-        return Icons.check_circle_outline;
-      case GrupoStatusExibicao.cancelada:
-        return Icons.cancel_outlined;
-    }
-  }
-}
-
-String _formatarHorario(SolicitacaoEntity s) {
-  String dois(int n) => n.toString().padLeft(2, '0');
-  if (s.janelaColetaInicio != null && s.janelaColetaFim != null) {
-    final ini = s.janelaColetaInicio!;
-    final fim = s.janelaColetaFim!;
-    return '${dois(ini.hour)}:${dois(ini.minute)} - ${dois(fim.hour)}:${dois(fim.minute)}';
-  }
-  final c = s.criadoEm;
-  return 'Criada às ${dois(c.hour)}:${dois(c.minute)}';
-}
-
-/// Linha curta "Aceita por: <nome>" exibida nos cards do dashboard assim
-/// que uma solicitação já tem coletador atribuído — vale tanto pra quem
-/// aceitou (aparece "Você") quanto pros demais coletadores, que veem que
-/// já não está mais em aberto.
-class _AceitaPorLinha extends ConsumerWidget {
-  final String coletadorId;
-  const _AceitaPorLinha({required this.coletadorId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final meuId = ref.watch(authControllerProvider).usuario?.id;
-    final souEu = meuId == coletadorId;
-    final async = ref.watch(usuarioPublicoProvider(coletadorId));
-
-    return Row(
-      children: [
-        const Icon(
-          Icons.local_shipping_outlined,
-          size: 13,
-          color: AppColors.cinzaTexto,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: async.when(
-            loading: () => Text(
-              'Aceita por: ...',
-              style: AppTextStyles.legenda.copyWith(fontSize: 12),
-            ),
-            error: (_, __) => Text(
-              'Aceita',
-              style: AppTextStyles.legenda.copyWith(fontSize: 12),
-            ),
-            data: (coletador) => Text(
-              (coletador?.nome ?? '—'),
-              style: AppTextStyles.legenda.copyWith(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ColetaCard extends StatelessWidget {
-  final SolicitacaoEntity solicitacao;
-  final VoidCallback onTap;
-
-  const _ColetaCard({required this.solicitacao, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final grupo = solicitacao.status.grupoExibicao;
-    final codigo =
-        solicitacao.codigoDevolucao ??
-        solicitacao.id.substring(0, 8).toUpperCase();
-    // nomeContato/enderecoResumo agora são um snapshot preenchido na
-    // criação da solicitação (tanto para avulsa quanto para cliente
-    // cadastrado — ver `NovaSolicitacaoPage._enviar`), então não há mais
-    // necessidade de diferenciar por `avulsa` aqui.
-    final cliente = solicitacao.nomeExibicao;
-    final endereco = solicitacao.enderecoResumo ?? 'Endereço não informado';
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.branco,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.cinzaBorda),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: grupo.cor,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(16),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: grupo.cor.withValues(alpha: .12),
-                          child: Icon(grupo.icone, size: 20, color: grupo.cor),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    codigo,
-                                    style: AppTextStyles.subtitulo.copyWith(
-                                      fontSize: 15,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: grupo.cor.withValues(alpha: .12),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      grupo.label,
-                                      style: AppTextStyles.legenda.copyWith(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: grupo.cor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Cliente: $cliente',
-                                style: AppTextStyles.legenda,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.place_outlined,
-                                    size: 13,
-                                    color: AppColors.cinzaTexto,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      endereco,
-                                      style: AppTextStyles.legenda.copyWith(
-                                        fontSize: 12,
-                                      ),
-                                      maxLines: 5, // ou 3, se preferir
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: true,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.access_time,
-                                    size: 13,
-                                    color: AppColors.cinzaTexto,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _formatarHorario(solicitacao),
-                                    style: AppTextStyles.legenda.copyWith(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (solicitacao.coletadorId != null) ...[
-                                const SizedBox(height: 2),
-                                _AceitaPorLinha(
-                                  coletadorId: solicitacao.coletadorId!,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Center(
-                          child: const Icon(
-                            Icons.chevron_right,
-                            color: AppColors.cinzaTexto,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bloco de dica informativa, no mesmo padrão de
-/// `SolicitarSemCadastroPage._AvisoImportante`.
 class _DicaDoDia extends StatelessWidget {
   const _DicaDoDia();
 

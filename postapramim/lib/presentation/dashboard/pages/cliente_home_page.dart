@@ -4,24 +4,30 @@ import 'package:go_router/go_router.dart';
 import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
-import 'package:postapramim/core/constants/app_constants.dart';
 import 'package:postapramim/presentation/auth/providers/auth_providers.dart';
 import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_providers.dart';
-import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
+import 'package:postapramim/presentation/widgets/campo_busca.dart';
+import 'package:postapramim/presentation/widgets/solicitacao_cards.dart';
 import 'package:postapramim/shared/widgets/app_drawer.dart';
 
-class ClienteHomePage extends ConsumerWidget {
+class ClienteHomePage extends ConsumerStatefulWidget {
   const ClienteHomePage({super.key});
 
+  @override
+  ConsumerState<ClienteHomePage> createState() => _ClienteHomePageState();
+}
+
+class _ClienteHomePageState extends ConsumerState<ClienteHomePage> {
   // Cor de fundo levemente acinzentada por trás dos cards brancos, igual ao
-  // mockup. Ajuste para AppColors.xxx caso já exista uma cor equivalente no
-  // seu design system.
+  // mockup.
   static const _corFundo = Color(0xFFF6F7F9);
 
+  String _busca = '';
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final usuario = ref.watch(authControllerProvider).usuario;
     final primeiroNome = (usuario?.nome ?? '').split(' ').first;
     final solicitacoesAsync = ref.watch(minhasSolicitacoesRealtimeProvider);
@@ -39,7 +45,17 @@ class ClienteHomePage extends ConsumerWidget {
           ),
           data: (solicitacoes) {
             final resumo = _ResumoDevolucoes.deLista(solicitacoes);
-            final recentes = solicitacoes.take(5).toList();
+
+            // Cliente pesquisa somente pelo código de devolução.
+            final termo = _busca.trim().toLowerCase();
+            final filtradas = termo.isEmpty
+                ? solicitacoes
+                : solicitacoes.where((s) {
+                    final codigo = (s.codigoDevolucao ?? s.id.substring(0, 8))
+                        .toLowerCase();
+                    return codigo.contains(termo);
+                  }).toList();
+            final recentes = filtradas.take(5).toList();
 
             return ListView(
               padding: const EdgeInsets.all(20),
@@ -52,6 +68,11 @@ class ClienteHomePage extends ConsumerWidget {
                   onTap: () => context.push(RoutePaths.clienteNovaSolicitacao),
                 ),
                 const SizedBox(height: 24),
+                CampoBusca(
+                  hint: 'Pesquisar por código',
+                  onChanged: (v) => setState(() => _busca = v),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -76,7 +97,7 @@ class ClienteHomePage extends ConsumerWidget {
                   const _ListaVazia()
                 else
                   for (final s in recentes) ...[
-                    _SolicitacaoCard(
+                    SolicitacaoClienteCard(
                       solicitacao: s,
                       onTap: () => context.push(
                         RoutePaths.clienteDetalheSolicitacao.replaceFirst(
@@ -93,6 +114,18 @@ class ClienteHomePage extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: NavigationBar(
+        backgroundColor: AppColors.branco,
+        indicatorColor: AppColors.amarelo,
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTextStyles.legenda.copyWith(
+              color: AppColors.amarelo,
+              fontWeight: FontWeight.bold,
+            );
+          }
+
+          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+        }),
         selectedIndex: 0,
         onDestinationSelected: (i) {
           switch (i) {
@@ -109,16 +142,19 @@ class ClienteHomePage extends ConsumerWidget {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
+            icon: Icon(Icons.home_outlined, color: AppColors.branco),
             label: 'Início',
           ),
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
+            icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
             label: 'Solicitações',
           ),
-          NavigationDestination(icon: Icon(Icons.help_outline), label: 'Ajuda'),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
+            label: 'Ajuda',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
             label: 'Conta',
           ),
         ],
@@ -413,206 +449,6 @@ class _BotaoNovaSolicitacao extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// UI (labels/cores/ícones) para os baldes de status definidos em
-/// `status_solicitacao_ui.dart`, no esquema de cores da Home do cliente.
-extension GrupoStatusExibicaoUiX on GrupoStatusExibicao {
-  String get label {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return 'Realizada';
-      case GrupoStatusExibicao.coleta:
-        return 'Em coleta';
-      case GrupoStatusExibicao.emtransito:
-        return 'Em trânsito';
-      case GrupoStatusExibicao.concluida:
-        return 'Concluída';
-      case GrupoStatusExibicao.cancelada:
-        return 'Cancelada';
-    }
-  }
-
-  Color get cor {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return AppColors.cinzaTexto;
-      case GrupoStatusExibicao.coleta:
-        return AppColors.amarelo;
-      case GrupoStatusExibicao.emtransito:
-        return AppColors.azulInstitucional;
-      case GrupoStatusExibicao.concluida:
-        return Colors.green;
-      case GrupoStatusExibicao.cancelada:
-        return AppColors.erro;
-    }
-  }
-
-  String get imagem {
-    switch (this) {
-      case GrupoStatusExibicao.realizada:
-        return 'assets/icons/icone_solicitar_sem_cadastro.png';
-      case GrupoStatusExibicao.coleta:
-        return 'assets/icons/icone_solicitar_sem_cadastro.png';
-      case GrupoStatusExibicao.emtransito:
-        return 'assets/icons/em_transito.png';
-      case GrupoStatusExibicao.concluida:
-        return 'assets/icons/concluida.png';
-      case GrupoStatusExibicao.cancelada:
-        return 'assets/icons/cancelada.png';
-    }
-  }
-}
-
-String _formatarDataHora(DateTime dt) {
-  String dois(int n) => n.toString().padLeft(2, '0');
-  return '${dois(dt.day)}/${dois(dt.month)}/${dt.year} às '
-      '${dois(dt.hour)}:${dois(dt.minute)}';
-}
-
-/// Mostra o nome do coletador assim que a solicitação já tiver um
-/// atribuído — visível pro cliente tanto aqui na Home quanto na tela de
-/// detalhe da solicitação.
-class _ColetadorAtribuidoLinha extends ConsumerWidget {
-  final String coletadorId;
-  const _ColetadorAtribuidoLinha({required this.coletadorId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(usuarioPublicoProvider(coletadorId));
-    return Row(
-      children: [
-        const Icon(
-          Icons.local_shipping_outlined,
-          size: 12,
-          color: AppColors.cinzaTexto,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: async.when(
-            loading: () => Text(
-              'Coletador: ...',
-              style: AppTextStyles.legenda.copyWith(fontSize: 11),
-            ),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (coletador) => Text(
-              'Coletador: ${coletador?.nome ?? '—'}',
-              style: AppTextStyles.legenda.copyWith(fontSize: 11),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SolicitacaoCard extends StatelessWidget {
-  final SolicitacaoEntity solicitacao;
-  final VoidCallback onTap;
-
-  const _SolicitacaoCard({required this.solicitacao, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final grupo = solicitacao.status.grupoExibicao;
-    final codigo =
-        solicitacao.codigoDevolucao ??
-        solicitacao.id.substring(0, 8).toUpperCase();
-    // Usa sempre o snapshot gravado na criação da solicitação, e não o
-    // nome atual do usuário logado — assim, se o cliente editar o perfil
-    // depois, as solicitações antigas continuam mostrando o nome de
-    // quando foram criadas.
-    final nomeExibido = solicitacao.nomeExibicao;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.branco,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.cinzaBorda),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Image.asset(grupo.imagem, width: 50, height: 50, fit: BoxFit.contain),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    codigo,
-                    style: AppTextStyles.subtitulo.copyWith(fontSize: 15),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Cliente: $nomeExibido',
-                    style: AppTextStyles.legenda,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    _formatarDataHora(solicitacao.criadoEm),
-                    style: AppTextStyles.legenda.copyWith(fontSize: 11),
-                  ),
-                  if (solicitacao.coletadorId != null) ...[
-                    const SizedBox(height: 2),
-                    _ColetadorAtribuidoLinha(
-                      coletadorId: solicitacao.coletadorId!,
-                    ),
-                  ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.circle, size: 8, color: grupo.cor),
-                      const SizedBox(width: 6),
-                      Text(
-                        grupo.label,
-                        style: AppTextStyles.corpo.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: grupo.cor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: OutlinedButton(
-              onPressed: onTap,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.azulInstitucional),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Ver detalhes',
-                style: AppTextStyles.corpo.copyWith(
-                  color: AppColors.azulInstitucional,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -274,11 +274,6 @@ class _EnderecoFormPageState extends ConsumerState<EnderecoFormPage> {
                 FutureBuilder<Map<String, String?>>(
                   future: _dadosPerfilFuture,
                   builder: (context, snapshot) {
-                    final carregando =
-                        snapshot.connectionState == ConnectionState.waiting;
-                    final cpf = snapshot.data?['cpf'];
-                    final telefone = snapshot.data?['telefone'];
-
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

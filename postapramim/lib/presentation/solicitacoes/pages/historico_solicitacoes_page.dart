@@ -4,13 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
-import 'package:postapramim/core/constants/app_constants.dart';
-import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
-import 'package:postapramim/core/utils/formatters.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_providers.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
 import 'package:postapramim/presentation/widgets/filtro_solicitacoes.dart';
-import 'package:postapramim/shared/widgets/app_card.dart';
+import 'package:postapramim/presentation/widgets/solicitacao_cards.dart';
 import 'package:postapramim/shared/widgets/state_widgets.dart';
 
 class HistoricoSolicitacoesPage extends ConsumerStatefulWidget {
@@ -30,15 +27,26 @@ class _HistoricoSolicitacoesPageState
     final async = ref.watch(minhasSolicitacoesRealtimeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Minhas solicitações')),
+      backgroundColor: AppColors.branco,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: AppColors.amarelo),
+        title: Text(
+          'Minhas solicitações',
+          style: AppTextStyles.titulo.copyWith(color: AppColors.amarelo),
+        ),
+        backgroundColor: AppColors.branco,
+      ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Cliente pesquisa somente por código (mesmo critério do
+            // dashboard do cliente).
             FiltroSolicitacoesBar(
               filtro: _filtro,
               onChanged: (f) => setState(() => _filtro = f),
+              hintBusca: 'Pesquisar por código',
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -52,6 +60,7 @@ class _HistoricoSolicitacoesPageState
                         (s) =>
                             _filtro.aceita(s.criadoEm, s.status.grupoExibicao),
                       )
+                      .where((s) => _filtro.aceitaBusca(s))
                       .toList();
 
                   if (filtrada.isEmpty) {
@@ -68,54 +77,13 @@ class _HistoricoSolicitacoesPageState
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final s = filtrada[index];
-                      return AppCard(
+                      return SolicitacaoClienteCard(
+                        solicitacao: s,
                         onTap: () => context.push(
                           RoutePaths.clienteDetalheSolicitacao.replaceFirst(
                             ':id',
                             s.id,
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: AppColors.statusColor(
-                                  s.status.valorBanco,
-                                ),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s.codigoDevolucao ??
-                                        s.id.substring(0, 8).toUpperCase(),
-                                    style: AppTextStyles.subtitulo.copyWith(
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    s.status.label,
-                                    style: AppTextStyles.legenda.copyWith(
-                                      color: AppColors.statusColor(
-                                        s.status.valorBanco,
-                                      ),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              Formatters.data(s.criadoEm),
-                              style: AppTextStyles.legenda,
-                            ),
-                          ],
                         ),
                       );
                     },

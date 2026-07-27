@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class MockSolicitacao {
   final MockStatus status;
   final String codigoDevolucao;

@@ -32,7 +32,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Future<void> _decidirRota() async {
     // Um pouco mais longo que antes (era 800ms) para dar tempo da
     // animação de entrada do logo e do card de loading aparecerem bem.
-    await Future.delayed(const Duration(milliseconds: 1600));
+    await Future.delayed(const Duration(milliseconds: 3200));
     if (!mounted) return;
 
     final authState = ref.read(authControllerProvider);

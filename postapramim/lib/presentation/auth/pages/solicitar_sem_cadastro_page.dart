@@ -58,7 +58,6 @@ class _SolicitarSemCadastroPageState
   final _bairroCtrl = TextEditingController();
   final _cidadeCtrl = TextEditingController();
   String? _estado;
-  bool _enviando = false;
   String get mensagem =>
       '''
 📦 *Posta Pra Mim*
@@ -155,8 +154,6 @@ Via APP v${AppConstants.versaoApp}
   Future<void> _solicitar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _enviando = true);
-
     final result = await ref.read(criarSolicitacaoAvulsaUsecaseProvider)(
       codigoDevolucao: _codigoCtrl.text.trim(),
       nomeContato: _nomeCtrl.text.trim(),
@@ -174,7 +171,6 @@ Via APP v${AppConstants.versaoApp}
     );
 
     if (!mounted) return;
-    setState(() => _enviando = false);
 
     await result.fold(
       onSuccess: (_) async {

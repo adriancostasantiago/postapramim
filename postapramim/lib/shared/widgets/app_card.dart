@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:postapramim/app/theme/app_colors.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -15,6 +16,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppColors.branco,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
