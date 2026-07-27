@@ -1,68 +1,89 @@
-name: posta_pra_mim
-description: "Logística inteligente e simplificada — Posta Pra Mim."
+name: postapramim
+description: "App de logística reversa - coleta de encomendas para devolução."
 publish_to: "none"
-version: 1.2.0+1
+version: 0.1.0+1
 
 environment:
-  sdk: ">=3.6.0 <4.0.0"
-  flutter: ">=3.27.0"
+  sdk: ">=3.8.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
+  # Estado / DI
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^4.0.0
+
+  # Navegação
+  go_router: ^14.2.0
+
+  # Backend
+  supabase_flutter: ^2.5.6
+
+  # Modelagem / Serialização
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.11.0
+
+  # Cache local
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Segurança
+  flutter_secure_storage: ^9.2.2
+
+  # Notificações
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.1.0
+
+  # Scanner
+  mobile_scanner: ^7.4.0
+
+  # Mapas
+  google_maps_flutter: ^2.7.0
+
+  # i18n / formatação
+  intl: ^0.20.2
+
+  # HTTP externo (ViaCEP, etc.)
+  dio: ^5.5.0
+
+  # Logging
+  logger: ^2.4.0
+
+  # Utilitários
+  connectivity_plus: ^6.0.5
+  equatable: ^2.0.5
+  uuid: ^4.4.2
+  cached_network_image: ^3.4.1
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  build_runner: ^2.4.11
+  freezed: ^3.2.3
+  json_serializable: ^6.8.0
+  riverpod_generator: ^4.0.0
 
   flutter_launcher_icons: ^0.14.4
 
-  # --- Supabase (auth + banco) ---
-  supabase_flutter: ^2.5.0        
-
-  # State management
-  provider: ^6.1.2
-
-  # Navigation
-  go_router: ^14.2.0
-
-  # Networking & data
-  http: ^1.2.2
-
-  # Secure storage (tokens/credentials — never plaintext)
-  flutter_secure_storage: ^9.2.2
-
-  # Login social com Google. Descomente e rode `flutter pub get` ao
-  # configurar a integração real (ver lib/data/datasources/
-  # google_auth_datasource.dart para instruções completas).
-  # google_sign_in: ^6.2.1
-
-  # Value equality without boilerplate
-  equatable: ^2.0.5
-
-  # Logging (replaces print())
-  logging: ^1.2.0
-
-  # Network image caching
-  cached_network_image: ^3.4.1
-
-  cupertino_icons: ^1.0.8
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
 
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/icon-logo-app.png"
   min_sdk_android: 21
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-  # Strict lint set (see analysis_options.yaml)
-  flutter_lints: ^4.0.0
-
-  # Mocking for unit tests
-  mocktail: ^1.0.4
-
-flutter:
-  uses-material-design: true
-  assets:
-    - assets/images/
-    - assets/images/logo-transparente.png
+  adaptive_icon_background: "#FFD200"
+  adaptive_icon_foreground: "assets/images/icon-logo-app.png"
