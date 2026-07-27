@@ -1,124 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:posta_pra_mim/core/router/app_routes.dart';
 import 'package:posta_pra_mim/core/theme/app_colors.dart';
-import 'widgets/carga_step.dart';
-import 'widgets/destinatario_step.dart';
-import 'widgets/novo_pedido_step_indicator.dart';
-import 'widgets/pix_pagamento_page.dart';
-import 'widgets/remetente_step.dart';
-import 'widgets/revisao_step.dart';
+import 'package:posta_pra_mim/domain/usecases/novo_pedido_usecases.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/steps/carga_step.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/steps/destinatario_step.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/steps/remetente_step.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/steps/revisao_step.dart';
+import 'package:posta_pra_mim/presentation/novo_pedido/widgets/novo_pedido_stepper.dart';
+import 'package:posta_pra_mim/presentation/shared/state/novo_pedido_controller.dart';
+import 'package:posta_pra_mim/presentation/shared/state/novo_pedido_state.dart';
 
-/// Fluxo de criação de novo pedido em 4 etapas:
-/// 0 — Remetente
-/// 1 — Destinatário
-/// 2 — Carga
-/// 3 — Revisão
-///
-/// A navegação entre etapas é gerida localmente por [_currentStep].
-/// Os dados de cada etapa são mantidos em objetos `*StepData` que
-/// sobrevivem à troca de passo (não são recriados no build).
-class NovoPedidoPage extends StatefulWidget {
+/// Tela de criação de novo pedido — orquestra as 4 etapas do
+/// formulário. Não chama rede/IO diretamente: delega ao
+/// `NovoPedidoController`, instanciado localmente.
+class NovoPedidoPage extends StatelessWidget {
   const NovoPedidoPage({super.key});
 
   @override
-  State<NovoPedidoPage> createState() => _NovoPedidoPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<NovoPedidoController>(
+      create: (ctx) => NovoPedidoController(
+        buscarEnderecoPorCepUseCase: ctx.read<BuscarEnderecoPorCepUseCase>(),
+        criarPedidoUseCase: ctx.read<CriarPedidoUseCase>(),
+        calcularValorEstimadoUseCase: ctx.read<CalcularValorEstimadoUseCase>(),
+      ),
+      child: const _NovoPedidoView(),
+    );
+  }
 }
 
-class _NovoPedidoPageState extends State<NovoPedidoPage> {
-  int _currentStep = 0;
-
-  // Dados das etapas — criados uma vez e passados para os widgets filhos.
-  final _remetenteData = RemetenteStepData();
-  final _destinatarioData = DestinatarioStepData();
-  final _cargaData = CargaStepData();
-
-  // Chave global do revisão step para acessar o pagamento selecionado.
-  final _revisaoKey = GlobalKey<RevisaoStepState>();
-
-  // Controla o scroll para o topo ao trocar de etapa.
-  final _scrollController = ScrollController();
+class _NovoPedidoView extends StatefulWidget {
+  const _NovoPedidoView();
 
   @override
-  void dispose() {
-    _remetenteData.dispose();
-    _destinatarioData.dispose();
-    _cargaData.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
+  State<_NovoPedidoView> createState() => _NovoPedidoViewState();
+}
 
-  void _goToNext() {
-    if (_currentStep < 3) {
-      setState(() => _currentStep++);
-      _scrollToTop();
-    } else {
-      _finalizarPedido();
-    }
-  }
+class _NovoPedidoViewState extends State<_NovoPedidoView> {
+  // Chaves de formulário por etapa — mantidas no State para persistir
+  // entre rebuilds do Consumer.
+  final _formKeyRemetente = GlobalKey<FormState>();
+  final _formKeyDestinatario = GlobalKey<FormState>();
+  final _formKeyCarga = GlobalKey<FormState>();
 
-  void _goToPrevious() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-      _scrollToTop();
-    } else {
-      Navigator.of(context).maybePop();
-    }
-  }
+  // Referências às State classes dos steps para chamar confirmarEAvancar().
+  final _remetenteKey = GlobalKey<RemetenteStepState>();
+  final _destinatarioKey = GlobalKey<DestinatarioStepState>();
+  final _cargaKey = GlobalKey<CargaStepState>();
 
-  void _scrollToTop() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
-  void _finalizarPedido() {
-    final pagamento = _revisaoKey.currentState?.selectedPagamento;
-
-    if (pagamento == FormaPagamentoNovo.pix) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PixPagamentoPage(
-            codigoPedido: 'BR992831',
-            valor: 45.90,
-            onConfirmar: () {
-              // Volta ao dashboard fechando toda a pilha de navegação
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Pedido criado! Pagamento confirmado.'),
-                ),
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido criado com sucesso!')),
-      );
-    }
-  }
-
-  String get _nextLabel => switch (_currentStep) {
-        0 => 'Próximo Passo →',
-        1 => 'Próximo Passo →',
-        2 => 'Revisar Pedido →',
-        _ => 'Finalizar Pedido →',
-      };
-
-  String get _appBarTitle => switch (_currentStep) {
-        0 => 'Novo Pedido - Remetente',
-        1 => 'Novo Pedido - Destinatário',
-        2 => 'Novo Pedido - Dados da Carga',
-        _ => 'Revisão do Pedido',
-      };
+  static const _titulos = [
+    'Novo Pedido - Remetente',
+    'Novo Pedido - Destinatário',
+    'Novo Pedido - Dados da Carga',
+    'Revisão do Pedido',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<NovoPedidoController>().state;
+
+    // Navegação acionada por mudança de estado — mesmo padrão da SplashPage.
+    _handleStateNavigation(state);
+
+    final edicao = switch (state) {
+      NovoPedidoEmEdicao() => state,
+      NovoPedidoSalvando(:final edicao) => edicao,
+      NovoPedidoErro(:final edicao) => edicao,
+      NovoPedidoCriado() => null,
+    };
+    if (edicao == null) return const SizedBox.shrink();
+
+    final etapa = edicao.etapaAtual;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -127,32 +82,34 @@ class _NovoPedidoPageState extends State<NovoPedidoPage> {
         scrolledUnderElevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-          onPressed: _goToPrevious,
-          tooltip: _currentStep == 0 ? 'Cancelar' : 'Anterior',
+          onPressed: () {
+            if (etapa == 0) {
+              context.pop();
+            } else {
+              context.read<NovoPedidoController>().voltarEtapa();
+            }
+          },
         ),
         title: Text(
-          _appBarTitle,
+          _titulos[etapa],
           style: const TextStyle(
             color: AppColors.onSurface,
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: [
-          if (_currentStep == 3)
-            IconButton(
-              icon: const Icon(Icons.help_outline, color: AppColors.onSurface),
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ajuda em breve.')),
-              ),
-              tooltip: 'Ajuda',
-            ),
+        actions: const [
+          Icon(
+            Icons.notifications_none_outlined,
+            color: AppColors.onSurface,
+          ),
+          SizedBox(width: 8),
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.primary,
-              child: const Text(
+              child: Text(
                 'G',
                 style: TextStyle(
                   color: AppColors.onPrimary,
@@ -168,141 +125,183 @@ class _NovoPedidoPageState extends State<NovoPedidoPage> {
         top: false,
         child: Column(
           children: [
-            // Step indicator fixo no topo
+            // Stepper sempre visível no topo do body.
             Container(
               color: AppColors.surfaceContainerLowest,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: NovoPedidoStepIndicator(currentStep: _currentStep),
+              child: NovoPedidoStepper(etapaAtual: etapa),
             ),
-            const Divider(height: 1),
-
-            // Conteúdo scrollável
             Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey(_currentStep),
-                    child: _buildCurrentStep(),
+              child: IndexedStack(
+                index: etapa,
+                children: [
+                  RemetenteStep(
+                    key: _remetenteKey,
+                    formKey: _formKeyRemetente,
+                    dadosIniciais: edicao.remetente,
                   ),
-                ),
+                  DestinatarioStep(
+                    key: _destinatarioKey,
+                    formKey: _formKeyDestinatario,
+                    dadosIniciais: edicao.destinatario,
+                  ),
+                  CargaStep(
+                    key: _cargaKey,
+                    formKey: _formKeyCarga,
+                    dadosIniciais: edicao.carga,
+                  ),
+                  RevisaoStep(edicao: edicao),
+                ],
               ),
             ),
           ],
         ),
       ),
-
-      // Bottom action bar
-      bottomNavigationBar: _BottomActionBar(
-        currentStep: _currentStep,
-        nextLabel: _nextLabel,
-        onNext: _goToNext,
-        onPrevious: _currentStep > 0 ? _goToPrevious : null,
-        onCancel: _currentStep == 0
-            ? () => Navigator.of(context).maybePop()
-            : null,
+      bottomNavigationBar: _BottomNav(
+        etapa: etapa,
+        isSalvando: state is NovoPedidoSalvando,
+        onAnterior: () => context.read<NovoPedidoController>().voltarEtapa(),
+        onProximo: _avancar,
+        onCancelar: () => context.pop(),
       ),
     );
   }
 
-  Widget _buildCurrentStep() {
-    return switch (_currentStep) {
-      0 => RemetenteStep(data: _remetenteData),
-      1 => DestinatarioStep(data: _destinatarioData),
-      2 => CargaStep(data: _cargaData),
-      _ => RevisaoStep(
-          key: _revisaoKey,
-          remetente: _remetenteData,
-          destinatario: _destinatarioData,
-          carga: _cargaData,
-        ),
+  void _avancar() {
+    final state = context.read<NovoPedidoController>().state;
+    final etapa = switch (state) {
+      NovoPedidoEmEdicao(:final etapaAtual) => etapaAtual,
+      _ => -1,
     };
+
+    switch (etapa) {
+      case 0:
+        _remetenteKey.currentState?.confirmarEAvancar();
+      case 1:
+        _destinatarioKey.currentState?.confirmarEAvancar();
+      case 2:
+        _cargaKey.currentState?.confirmarEAvancar();
+      case 3:
+        context.read<NovoPedidoController>().finalizarPedido();
+    }
+  }
+
+  void _handleStateNavigation(NovoPedidoState state) {
+    if (state is NovoPedidoCriado) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final resultado = state.resultado;
+        if (resultado.pix != null) {
+          context.pushReplacement(
+            AppRoutes.pagamentoPix,
+            extra: resultado.pix,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Pedido ${resultado.codigo} criado! '
+                'Você receberá as instruções de pagamento por e-mail.',
+              ),
+            ),
+          );
+          context.go(AppRoutes.managerDashboard);
+        }
+      });
+    } else if (state is NovoPedidoErro) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.failure.message)),
+        );
+      });
+    }
   }
 }
 
-class _BottomActionBar extends StatelessWidget {
-  const _BottomActionBar({
-    required this.currentStep,
-    required this.nextLabel,
-    required this.onNext,
-    this.onPrevious,
-    this.onCancel,
+class _BottomNav extends StatelessWidget {
+  const _BottomNav({
+    required this.etapa,
+    required this.isSalvando,
+    required this.onAnterior,
+    required this.onProximo,
+    required this.onCancelar,
   });
 
-  final int currentStep;
-  final String nextLabel;
-  final VoidCallback onNext;
-  final VoidCallback? onPrevious;
-  final VoidCallback? onCancel;
+  final int etapa;
+  final bool isSalvando;
+  final VoidCallback onAnterior;
+  final VoidCallback onProximo;
+  final VoidCallback onCancelar;
+
+  bool get _isRevisao => etapa == 3;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
+        16,
+        12,
+        16,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         border: Border(top: BorderSide(color: AppColors.outlineVariant)),
       ),
       child: Row(
         children: [
-          // Botão esquerdo: "Cancelar" no passo 0, "← Anterior" nos demais
-          if (onCancel != null)
+          if (etapa == 0)
             TextButton(
-              onPressed: onCancel,
+              onPressed: onCancelar,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                foregroundColor: AppColors.onSurfaceVariant,
               ),
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: AppColors.onSurfaceVariant),
-              ),
+              child: const Text('Cancelar'),
             )
-          else if (onPrevious != null)
-            OutlinedButton(
-              onPressed: onPrevious,
+          else
+            OutlinedButton.icon(
+              onPressed: onAnterior,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 side: BorderSide(color: AppColors.outlineVariant),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
-              child: const Text(
-                '← Anterior',
-                style: TextStyle(color: AppColors.onSurface),
-              ),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Anterior'),
             ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: ElevatedButton(
-              onPressed: onNext,
+              onPressed: isSalvando ? null : onProximo,
               style: ElevatedButton.styleFrom(
-                backgroundColor: currentStep == 3
-                    ? AppColors.primaryYellow
-                    : AppColors.primary,
-                foregroundColor: currentStep == 3
-                    ? AppColors.onSurface
-                    : AppColors.onPrimary,
+                backgroundColor:
+                    _isRevisao ? AppColors.primary : AppColors.primaryYellow,
+                foregroundColor:
+                    _isRevisao ? AppColors.onPrimary : AppColors.onSurface,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
-              child: Text(
-                nextLabel,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
+              child: isSalvando
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _isRevisao ? 'Finalizar Pedido' : 'Próximo Passo',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
             ),
           ),
         ],

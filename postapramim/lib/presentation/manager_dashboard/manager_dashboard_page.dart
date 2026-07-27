@@ -98,17 +98,23 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
           },
         ),
       ),
+      // FAB:
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primaryYellow,
         foregroundColor: AppColors.onSurface,
-        onPressed: () => context.push('/manager/pedido/novo'),
+        onPressed: () => context.push(AppRoutes.novoPedido),
         child: const Icon(Icons.add),
       ),
+
       bottomNavigationBar: ManagerBottomNav(
         currentIndex: _bottomNavIndex,
         onTap: (index) {
+          if (index == 2) {
+            context.push(AppRoutes.novoPedido);
+            return;
+          }
           setState(() => _bottomNavIndex = index);
-          context.push('/manager/pedido/novo');
+          _showPlaceholderSnackBar('Navegação em breve.');
         },
       ),
     );

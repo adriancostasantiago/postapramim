@@ -78,17 +78,9 @@ class _AnimatedLogoState extends State<AnimatedLogo>
       },
       child: SizedBox(
         width: 256,
-        child: CachedNetworkImage(
-          imageUrl: widget.imageUrl,
+        child: Image.asset(
+          widget.imageUrl,
           fit: BoxFit.contain,
-          placeholder: (context, url) => const SizedBox(
-            height: 96,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          errorWidget: (context, url, error) => const Icon(
-            Icons.local_shipping_outlined,
-            size: 96,
-          ),
         ),
       ),
     );

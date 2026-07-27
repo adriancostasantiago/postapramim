@@ -11,6 +11,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+
+  flutter_launcher_icons: ^0.14.4
+
+  # --- Supabase (auth + banco) ---
+  supabase_flutter: ^2.5.0        
+
   # State management
   provider: ^6.1.2
 
@@ -39,6 +45,12 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon-logo-app.png"
+  min_sdk_android: 21
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -53,3 +65,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/logo-transparente.png

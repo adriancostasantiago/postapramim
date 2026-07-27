@@ -72,7 +72,8 @@ final class AuthRepositoryImpl implements AuthRepository {
       await _remote.logout();
     } on Failure catch (failure, stackTrace) {
       // Falha de rede no logout não deve travar o usuário localmente.
-      _log.warning('Logout remoto falhou, limpando sessão local', failure, stackTrace);
+      _log.warning(
+          'Logout remoto falhou, limpando sessão local', failure, stackTrace);
     } finally {
       await _local.clear();
     }

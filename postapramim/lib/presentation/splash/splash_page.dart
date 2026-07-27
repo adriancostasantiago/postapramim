@@ -24,15 +24,15 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     // Sessão é checada uma única vez ao montar a tela — não no build().
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      context.read<AuthController>().checkSession();
+      await context.read<AuthController>().checkSession();
     });
   }
 
-  void _goToRegister() => context.go(AppRoutes.register);
+  // void _goToRegister() => context.go(AppRoutes.register);
 
-  void _goToLogin() => context.go(AppRoutes.login);
+  // void _goToLogin() => context.go(AppRoutes.login);
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +60,11 @@ class _SplashPageState extends State<SplashPage> {
                             isLoading: controller.state is AuthLoading,
                           ),
                           const SizedBox(height: 32),
-                          SplashActionCard(
-                            onGetStarted: _goToRegister,
-                            onLogin: _goToLogin,
-                          ),
-                          const SizedBox(height: 24),
+                          // SplashActionCard(
+                          //   onGetStarted: _goToRegister,
+                          //   onLogin: _goToLogin,
+                          // ),
+                          // const SizedBox(height: 24),
                           const _SplashFooter(),
                         ],
                       ),
@@ -103,6 +103,10 @@ class _SplashHeadline extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    void goToRegister() => context.go(AppRoutes.register);
+
+    void goToLogin() => context.go(AppRoutes.login);
+
     return Column(
       children: [
         Text(
@@ -130,6 +134,12 @@ class _SplashHeadline extends StatelessWidget {
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ] else ...[
+          const SizedBox(height: 32),
+          SplashActionCard(
+            onGetStarted: goToRegister,
+            onLogin: goToLogin,
           ),
         ],
       ],
@@ -171,7 +181,7 @@ class _SplashFooter extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '© 2024 POSTA PRA MIM LOGÍSTICA',
+          '© 2026 POSTA PRA MIM LOGÍSTICA',
           style: textTheme.labelMedium?.copyWith(
             fontSize: 10,
             fontWeight: FontWeight.bold,

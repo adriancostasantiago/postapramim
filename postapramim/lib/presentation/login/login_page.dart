@@ -32,20 +32,20 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _submitLogin() async {
-    // if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    // final controller = context.read<AuthController>();
-    // await controller.login(
-    //   email: _emailController.text.trim(),
-    //   password: _passwordController.text,
-    // );
+    final controller = context.read<AuthController>();
+    await controller.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
-    // if (!mounted) return;
-    // final state = controller.state;
-    // if (state is AuthAuthenticated) {
-    //   context.go(AppRoutes.homeForRole(state.user.role));
-    // }
-    context.go(AppRoutes.managerDashboard);
+    if (!mounted) return;
+    final state = controller.state;
+    if (state is AuthAuthenticated) {
+      context.go(AppRoutes.homeForRole(state.user.role));
+    }
+    // context.go(AppRoutes.managerDashboard);
   }
 
   Future<void> _submitGoogleSignIn() async {

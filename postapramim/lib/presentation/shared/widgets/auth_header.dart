@@ -27,24 +27,28 @@ class AuthHeader extends StatelessWidget {
       children: [
         SizedBox(
           width: logoWidth,
-          child: CachedNetworkImage(
-            imageUrl: AppAssets.logoUrl,
+          child: Image.asset(
+            AppAssets.logoUrl,
             fit: BoxFit.contain,
-            placeholder: (context, url) => SizedBox(
-              height: logoWidth * 0.4,
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ),
-            errorWidget: (context, url, error) => const Icon(
-              Icons.local_shipping_outlined,
-              size: 40,
-            ),
           ),
+          // CachedNetworkImage(
+          //   imageUrl: AppAssets.logoUrl,
+          //   fit: BoxFit.contain,
+          //   placeholder: (context, url) => SizedBox(
+          //     height: logoWidth * 0.4,
+          //     child: const Center(
+          //       child: SizedBox(
+          //         width: 20,
+          //         height: 20,
+          //         child: CircularProgressIndicator(strokeWidth: 2),
+          //       ),
+          //     ),
+          //   ),
+          //   errorWidget: (context, url, error) => const Icon(
+          //     Icons.local_shipping_outlined,
+          //     size: 40,
+          //   ),
+          // ),
         ),
         const SizedBox(height: 24),
         Text(

@@ -204,7 +204,7 @@ final class MockPedidoRepository implements PedidoRepository {
     // sejam exercitados mesmo com dados mockados.
     await Future<void>.delayed(const Duration(milliseconds: 400));
 
-    final total = 1284;
+    final total = 1128;
     final solicitados = 42;
     final aceitos = 0; // exibido como "—" quando zero, ver widget
     final despachados = 1086;

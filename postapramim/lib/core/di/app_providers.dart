@@ -1,24 +1,26 @@
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:posta_pra_mim/data/datasources/auth_local_datasource.dart';
 import 'package:posta_pra_mim/data/datasources/auth_remote_datasource.dart';
 import 'package:posta_pra_mim/data/datasources/google_auth_datasource.dart';
+import 'package:posta_pra_mim/data/datasources/supabase_auth_datasource.dart';
+import 'package:posta_pra_mim/data/datasources/supabase_local_datasource.dart';
 import 'package:posta_pra_mim/data/repositories/auth_repository_impl.dart';
+import 'package:posta_pra_mim/data/repositories/mock_novo_pedido_repository.dart';
 import 'package:posta_pra_mim/data/repositories/mock_pedido_repository.dart';
 import 'package:posta_pra_mim/domain/repositories/auth_repository.dart';
+import 'package:posta_pra_mim/domain/repositories/novo_pedido_repository.dart';
 import 'package:posta_pra_mim/domain/repositories/pedido_repository.dart';
 import 'package:posta_pra_mim/domain/usecases/auth_usecases.dart';
+import 'package:posta_pra_mim/domain/usecases/novo_pedido_usecases.dart';
 import 'package:posta_pra_mim/domain/usecases/pedido_usecases.dart';
 import 'package:posta_pra_mim/presentation/shared/state/auth_controller.dart';
 import 'package:posta_pra_mim/presentation/shared/state/pedidos_controller.dart';
 
 /// Composição de dependências do app. Único lugar onde implementações
 /// concretas são construídas — o resto do app depende de abstrações.
-///
-/// Ambientes diferentes (dev/staging/prod) passam `baseUrl` distintas
-/// via configuração (ex: `--dart-define=API_BASE_URL=...`), nunca via
-/// `if` em runtime.
 final class AppProviders extends StatelessWidget {
   const AppProviders({
     required this.baseUrl,
@@ -33,29 +35,36 @@ final class AppProviders extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // --- Infra (singletons) ---
+        // --- Infra ---
         Provider<http.Client>(
           create: (_) => http.Client(),
           dispose: (_, client) => client.close(),
         ),
 
-        // --- Data sources ---
+        // O SupabaseClient é um singleton gerenciado pelo SDK — acesso
+        // via `Supabase.instance.client` (inicializado em main.dart).
+        Provider<SupabaseClient>(
+          create: (_) => Supabase.instance.client,
+        ),
+
+        // --- Data sources (Supabase) ---
         Provider<AuthRemoteDataSource>(
-          create: (ctx) => AuthRemoteDataSourceImpl(
-            client: ctx.read<http.Client>(),
-            baseUrl: baseUrl,
+          create: (ctx) => SupabaseAuthDataSourceImpl(
+            client: ctx.read<SupabaseClient>(),
           ),
         ),
         Provider<AuthLocalDataSource>(
-          create: (_) => AuthLocalDataSourceImpl(),
+          create: (ctx) => SupabaseLocalDataSourceImpl(
+            client: ctx.read<SupabaseClient>(),
+          ),
         ),
-        // STUB: troque por GoogleAuthDataSourceImpl quando o
-        // google_sign_in for configurado (ver datasource para detalhes).
+        // STUB Google: trocar por SupabaseGoogleAuthDataSource quando
+        // OAuth estiver configurado no Supabase Dashboard.
         Provider<GoogleAuthDataSource>(
           create: (_) => const GoogleAuthDataSourceStub(),
         ),
 
-        // --- Repositories (dependem de abstrações) ---
+        // --- Repositories ---
         Provider<AuthRepository>(
           create: (ctx) => AuthRepositoryImpl(
             remoteDataSource: ctx.read<AuthRemoteDataSource>(),
@@ -64,7 +73,7 @@ final class AppProviders extends StatelessWidget {
           ),
         ),
 
-        // --- Use cases ---
+        // --- Auth use cases ---
         Provider<LoginUseCase>(
           create: (ctx) => LoginUseCase(ctx.read<AuthRepository>()),
         ),
@@ -78,7 +87,7 @@ final class AppProviders extends StatelessWidget {
           create: (ctx) => GetCurrentUserUseCase(ctx.read<AuthRepository>()),
         ),
 
-        // --- Controllers (estado de apresentação) ---
+        // --- Auth controller ---
         ChangeNotifierProvider<AuthController>(
           create: (ctx) => AuthController(
             loginUseCase: ctx.read<LoginUseCase>(),
@@ -89,9 +98,7 @@ final class AppProviders extends StatelessWidget {
           ),
         ),
 
-        // --- Pedidos (dashboard do gestor) ---
-        // MOCK: troque por uma implementação HTTP quando o endpoint
-        // de pedidos existir — interface PedidoRepository não muda.
+        // --- Pedidos (MOCK — troque por implementação HTTP real) ---
         Provider<PedidoRepository>(
           create: (_) => MockPedidoRepository(),
         ),
@@ -107,9 +114,6 @@ final class AppProviders extends StatelessWidget {
           create: (ctx) =>
               AtualizarStatusPedidoUseCase(ctx.read<PedidoRepository>()),
         ),
-        // Use case stateless — o controller de detalhes (escopo por
-        // pedidoId) é instanciado localmente pela própria página, ver
-        // `pedido_detalhe_page.dart`.
         Provider<GetPedidoDetalheUseCase>(
           create: (ctx) =>
               GetPedidoDetalheUseCase(ctx.read<PedidoRepository>()),
@@ -121,6 +125,37 @@ final class AppProviders extends StatelessWidget {
             atualizarStatusPedidoUseCase:
                 ctx.read<AtualizarStatusPedidoUseCase>(),
           ),
+        ),
+
+        // --- Novo pedido (MOCK) ---
+        // Provider<NovoPedidoRepository>(
+        //   create: (_) => MockNovoPedidoRepository(),
+        // ),
+        // Provider<BuscarEnderecoPorCepUseCase>(
+        //   create: (ctx) =>
+        //       BuscarEnderecoPorCepUseCase(ctx.read<NovoPedidoRepository>()),
+        // ),
+        // Provider<CriarPedidoUseCase>(
+        //   create: (ctx) => CriarPedidoUseCase(ctx.read<NovoPedidoRepository>()),
+        // ),
+        // Provider<CalcularValorEstimadoUseCase>(
+        //   create: (ctx) =>
+        //       CalcularValorEstimadoUseCase(ctx.read<NovoPedidoRepository>()),
+        // ),
+
+        Provider<NovoPedidoRepository>(
+          create: (_) => MockNovoPedidoRepository(),
+        ),
+        Provider<BuscarEnderecoPorCepUseCase>(
+          create: (ctx) =>
+              BuscarEnderecoPorCepUseCase(ctx.read<NovoPedidoRepository>()),
+        ),
+        Provider<CriarPedidoUseCase>(
+          create: (ctx) => CriarPedidoUseCase(ctx.read<NovoPedidoRepository>()),
+        ),
+        Provider<CalcularValorEstimadoUseCase>(
+          create: (ctx) =>
+              CalcularValorEstimadoUseCase(ctx.read<NovoPedidoRepository>()),
         ),
       ],
       child: child,
