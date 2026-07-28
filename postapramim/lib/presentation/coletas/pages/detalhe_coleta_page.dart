@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
 import 'package:postapramim/core/constants/app_constants.dart';
@@ -9,6 +11,7 @@ import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart
 import 'package:postapramim/presentation/solicitacoes/providers/solicitacoes_providers.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
+import 'package:postapramim/shared/widgets/confirm_dialog.dart';
 import 'package:postapramim/shared/widgets/state_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -142,7 +145,7 @@ class _CabecalhoDetalhe extends StatelessWidget {
   String getStatusImage(StatusSolicitacao status) {
     switch (status) {
       case StatusSolicitacao.solicitacaoRealizada:
-        return 'assets/images/ilustracao_detalhe_solicitacao_realizada.png';
+        return 'assets/images/ilustracao_detalhe_solicitacao_nova.png';
 
       case StatusSolicitacao.aguardandoColeta:
         return 'assets/images/ilustracao_detalhe_solicitacao.png';
@@ -287,11 +290,11 @@ class _StatusDaColetaCard extends StatelessWidget {
       grupo: GrupoStatusExibicao.concluida,
     ),
 
-    (
-      label: 'Cancelada',
-      icone: Icons.cancel_outlined,
-      grupo: GrupoStatusExibicao.cancelada,
-    ),
+    // (
+    //   label: 'Cancelada',
+    //   icone: Icons.cancel_outlined,
+    //   grupo: GrupoStatusExibicao.cancelada,
+    // ),
   ];
 
   @override
@@ -742,6 +745,10 @@ class _BotaoCircular extends StatelessWidget {
 
 /// Barra fixa no rodapé — "Ligar para cliente" e "Atualizar status", que
 /// abre um bottom sheet com todas as etapas do fluxo + opção de cancelar.
+/// Barra fixa no rodapé — "Cancelar" e "Aceitar solicitação"/"Atualizar
+/// status". Atualizar status sempre avança para a próxima fase do fluxo
+/// (não há mais seletor de status: o próximo passo já é o único sentido
+/// possível desse botão).
 class _BotoesAcao extends ConsumerWidget {
   final String id;
   final SolicitacaoEntity solicitacao;
@@ -749,7 +756,6 @@ class _BotoesAcao extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final telefone = solicitacao.telefoneExibicao ?? '';
     final meuId = ref.watch(authControllerProvider).usuario?.id;
 
     final cor = AppColors.statusColor(solicitacao.status.valorBanco);
@@ -791,15 +797,15 @@ class _BotoesAcao extends ConsumerWidget {
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: telefone.isEmpty ? null : () => _ligarPara(telefone),
-              icon: Icon(Icons.call_outlined, color: cor),
+              onPressed: () => _cancelar(context, ref, id),
+              icon: const Icon(Icons.cancel_outlined, color: AppColors.erro),
               label: Text(
-                'Ligar para cliente',
-                style: AppTextStyles.botao.copyWith(color: cor),
+                'Cancelar',
+                style: AppTextStyles.botao.copyWith(color: AppColors.erro),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(color: cor),
+                side: const BorderSide(color: AppColors.erro),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -811,7 +817,7 @@ class _BotoesAcao extends ConsumerWidget {
             child: ElevatedButton.icon(
               onPressed: precisaAceitar
                   ? () => _aceitar(context, ref, id, meuId)
-                  : () => _abrirSeletorDeStatus(context, ref, id, solicitacao),
+                  : () => _avancarStatus(context, ref, id, solicitacao),
               icon: Icon(
                 precisaAceitar ? Icons.check_circle_outline : Icons.sync_alt,
                 color: AppColors.branco,
@@ -846,97 +852,78 @@ Future<void> _aceitar(
   String? meuId,
 ) async {
   if (meuId == null) return;
-  await ref
+
+  final confirmou = await showAppConfirmDialog(
+    context,
+    icone: Icons.check_circle_outline,
+    cor: AppColors.statusColor(StatusSolicitacao.aguardandoColeta.valorBanco),
+    titulo: 'Aceitar solicitação?',
+    mensagem: 'Você ficará responsável por esta coleta a partir de agora.',
+    labelConfirmar: 'Aceitar',
+  );
+  if (!confirmou || !context.mounted) return;
+
+  final ok = await ref
       .read(solicitacoesControllerProvider.notifier)
       .atualizarStatus(
         id: id,
         novoStatus: StatusSolicitacao.aguardandoColeta,
         coletadorId: meuId,
       );
+
+  if (ok && context.mounted) {
+    context.go(RoutePaths.coletadorDashboard);
+  }
 }
 
-/// Avança para o próximo status do fluxo (aguardandoColeta -> emTransito
-/// -> concluida) ou cancela. Não usa mais um seletor com todos os status
-/// possíveis: como o fluxo agora é linear, só faz sentido avançar um
-/// passo por vez (e o "aceitar" — que também define o coletador — já é
-/// feito por um botão separado, ver `_aceitar`).
-Future<void> _abrirSeletorDeStatus(
+Future<void> _cancelar(BuildContext context, WidgetRef ref, String id) async {
+  final confirmou = await showAppConfirmDialog(
+    context,
+    icone: Icons.cancel_outlined,
+    cor: AppColors.erro,
+    titulo: 'Cancelar solicitação?',
+    mensagem: 'Essa ação não pode ser desfeita.',
+    labelConfirmar: 'Cancelar solicitação',
+  );
+  if (!confirmou || !context.mounted) return;
+
+  final ok = await ref
+      .read(solicitacoesControllerProvider.notifier)
+      .atualizarStatus(id: id, novoStatus: StatusSolicitacao.cancelada);
+
+  if (ok && context.mounted) {
+    context.go(RoutePaths.coletadorDashboard);
+  }
+}
+
+/// Avança direto para o próximo status do fluxo linear (ex.: "Aguardando
+/// coleta" -> "Em trânsito"). O botão "Atualizar status" já significa "ir
+/// para a próxima fase" — não há seleção de status.
+Future<void> _avancarStatus(
   BuildContext context,
   WidgetRef ref,
   String id,
   SolicitacaoEntity solicitacao,
 ) async {
   final proximo = solicitacao.status.proximoStatus;
+  if (proximo == null) return;
 
-  final acao = await showModalBottomSheet<StatusSolicitacao>(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Text(
-              'Alterar status da coleta',
-              style: AppTextStyles.subtitulo.copyWith(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            if (proximo != null)
-              ListTile(
-                leading: Icon(
-                  Icons.circle,
-                  size: 12,
-                  color: AppColors.statusColor(proximo.valorBanco),
-                ),
-                title: Text(proximo.label),
-                onTap: () => Navigator.of(context).pop(proximo),
-              ),
-            const Divider(height: 24),
-            ListTile(
-              leading: const Icon(Icons.cancel_outlined, color: AppColors.erro),
-              title: const Text(
-                'Cancelar solicitação',
-                style: TextStyle(color: AppColors.erro),
-              ),
-              onTap: () =>
-                  Navigator.of(context).pop(StatusSolicitacao.cancelada),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      );
-    },
+  final confirmou = await showAppConfirmDialog(
+    context,
+    icone: Icons.sync_alt,
+    cor: AppColors.statusColor(proximo.valorBanco),
+    titulo: 'Confirmar mudança de status?',
+    mensagem: 'A solicitação passará para o status "${proximo.label}".',
   );
+  if (!confirmou || !context.mounted) return;
 
-  if (acao == null || !context.mounted) return;
-
-  if (acao == StatusSolicitacao.cancelada) {
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancelar solicitação?'),
-        content: const Text('Essa ação não pode ser desfeita.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Voltar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cancelar solicitação'),
-          ),
-        ],
-      ),
-    );
-    if (confirmou != true) return;
-  }
-
-  await ref
+  final ok = await ref
       .read(solicitacoesControllerProvider.notifier)
-      .atualizarStatus(id: id, novoStatus: acao);
+      .atualizarStatus(id: id, novoStatus: proximo);
+
+  if (ok && context.mounted) {
+    context.go(RoutePaths.coletadorDashboard);
+  }
 }
 
 Future<void> _ligarPara(String telefone) async {

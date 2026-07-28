@@ -49,10 +49,6 @@ class _ColetadorDashboardPageState
             // Coletador pesquisa por código OU pelo nome do cliente.
             final termo = _busca.trim().toLowerCase();
             final proximas = solicitacoes
-                .where(
-                  (s) =>
-                      s.status.grupoExibicao != GrupoStatusExibicao.cancelada,
-                )
                 .where((s) {
                   if (termo.isEmpty) return true;
                   final codigo = (s.codigoDevolucao ?? s.id.substring(0, 8))
@@ -144,16 +140,16 @@ class _ColetadorDashboardPageState
       ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.branco,
-        indicatorColor: AppColors.amarelo,
+        indicatorColor: AppColors.darkFundo,
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
           if (states.contains(WidgetState.selected)) {
             return AppTextStyles.legenda.copyWith(
-              color: AppColors.amarelo,
+              color: AppColors.darkFundo,
               fontWeight: FontWeight.bold,
             );
           }
 
-          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+          return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
         }),
         selectedIndex: 0,
         onDestinationSelected: (i) {
@@ -358,12 +354,14 @@ class _ListaVazia extends StatelessWidget {
 }
 
 class _ResumoColetas {
+  final int realizadas;
   final int agendadas;
   final int emAndamento;
   final int concluidas;
   final int canceladas;
 
   const _ResumoColetas({
+    required this.realizadas,
     required this.agendadas,
     required this.emAndamento,
     required this.concluidas,
@@ -396,6 +394,7 @@ class _ResumoColetas {
       }
     }
     return _ResumoColetas(
+      realizadas: realizadas,
       agendadas: agendadas,
       emAndamento: emAndamento,
       concluidas: concluidas,
@@ -403,6 +402,134 @@ class _ResumoColetas {
     );
   }
 }
+
+// class _ResumoDoDiaCard extends StatelessWidget {
+//   final _ResumoColetas resumo;
+//   final DateTime data;
+
+//   const _ResumoDoDiaCard({required this.resumo, required this.data});
+
+//   String _formatarData(DateTime d) {
+//     const meses = [
+//       'janeiro',
+//       'fevereiro',
+//       'março',
+//       'abril',
+//       'maio',
+//       'junho',
+//       'julho',
+//       'agosto',
+//       'setembro',
+//       'outubro',
+//       'novembro',
+//       'dezembro',
+//     ];
+//     return '${d.day.toString().padLeft(2, '0')} de ${meses[d.month - 1]}';
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: double.infinity,
+//       padding: const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: AppColors.branco,
+//         borderRadius: BorderRadius.circular(18),
+//         border: Border.all(color: AppColors.cinzaBorda),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 'Resumo do dia',
+//                 style: AppTextStyles.subtitulo.copyWith(fontSize: 16),
+//               ),
+//               Row(
+//                 children: [
+//                   const Icon(
+//                     Icons.calendar_today,
+//                     size: 14,
+//                     color: AppColors.cinzaTexto,
+//                   ),
+//                   const SizedBox(width: 6),
+//                   Text(
+//                     'Hoje, ${_formatarData(data)}',
+//                     style: AppTextStyles.legenda.copyWith(fontSize: 12),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 16),
+//           SingleChildScrollView(
+//             scrollDirection: Axis.horizontal,
+//             child: Row(
+//               children: [
+//                 SizedBox(
+//                   width: 200,
+//                   child: _ResumoItem(
+//                     valor: resumo.agendadas,
+//                     label: 'Aguardando',
+//                     linkLabel: 'Ver agenda',
+//                     imagePath: 'assets/icons/icone_solicitar_sem_cadastro.png',
+//                     icone: Icons.inventory_2_outlined,
+//                     cor: AppColors.alerta,
+//                     onTap: () =>
+//                         context.push(RoutePaths.coletadorMinhasColetas),
+//                   ),
+//                 ),
+//                 const SizedBox(width: 10),
+//                 SizedBox(
+//                   width: 120,
+//                   child: _ResumoItem(
+//                     valor: resumo.emAndamento,
+//                     label: 'Em trânsito',
+//                     linkLabel: 'Ver rotas',
+//                     imagePath: 'assets/icons/em_transito.png',
+//                     icone: Icons.local_shipping_outlined,
+//                     cor: AppColors.azulInstitucional,
+//                     onTap: () => context.push(RoutePaths.coletadorMapaRota),
+//                   ),
+//                 ),
+//                 const SizedBox(width: 10),
+//                 SizedBox(
+//                   width: 120,
+//                   child: _ResumoItem(
+//                     valor: resumo.concluidas,
+//                     label: 'Concluídas',
+//                     linkLabel: 'Ver concluídas',
+//                     imagePath: 'assets/icons/concluida.png',
+//                     icone: Icons.check_circle_outline,
+//                     cor: AppColors.sucesso,
+//                     onTap: () =>
+//                         context.push(RoutePaths.coletadorMinhasColetas),
+//                   ),
+//                 ),
+//                 const SizedBox(width: 10),
+//                 SizedBox(
+//                   width: 100,
+//                   child: _ResumoItem(
+//                     valor: resumo.canceladas,
+//                     label: 'Canceladas',
+//                     linkLabel: 'Ver detalhes',
+//                     imagePath: 'assets/icons/cancelada.png',
+//                     icone: Icons.cancel_outlined,
+//                     cor: AppColors.erro,
+//                     onTap: () =>
+//                         context.push(RoutePaths.coletadorMinhasColetas),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class _ResumoDoDiaCard extends StatelessWidget {
   final _ResumoColetas resumo;
@@ -445,7 +572,7 @@ class _ResumoDoDiaCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Resumo geral',
+                'Resumo do dia',
                 style: AppTextStyles.subtitulo.copyWith(fontSize: 16),
               ),
               Row(
@@ -464,67 +591,55 @@ class _ResumoDoDiaCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 120,
-                  child: _ResumoItem(
-                    valor: resumo.agendadas,
-                    label: 'Aguardando',
-                    linkLabel: 'Ver agenda',
-                    imagePath: 'assets/icons/icone_solicitar_sem_cadastro.png',
-                    icone: Icons.inventory_2_outlined,
-                    cor: AppColors.alerta,
-                    onTap: () =>
-                        context.push(RoutePaths.coletadorMinhasColetas),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 120,
-                  child: _ResumoItem(
-                    valor: resumo.emAndamento,
-                    label: 'Em trânsito',
-                    linkLabel: 'Ver rotas',
-                    imagePath: 'assets/icons/em_transito.png',
-                    icone: Icons.local_shipping_outlined,
-                    cor: AppColors.azulInstitucional,
-                    onTap: () => context.push(RoutePaths.coletadorMapaRota),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 120,
-                  child: _ResumoItem(
-                    valor: resumo.concluidas,
-                    label: 'Concluídas',
-                    linkLabel: 'Ver concluídas',
-                    imagePath: 'assets/icons/concluida.png',
-                    icone: Icons.check_circle_outline,
-                    cor: AppColors.sucesso,
-                    onTap: () =>
-                        context.push(RoutePaths.coletadorMinhasColetas),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 100,
-                  child: _ResumoItem(
-                    valor: resumo.canceladas,
-                    label: 'Canceladas',
-                    linkLabel: 'Ver detalhes',
-                    imagePath: 'assets/icons/cancelada.png',
-                    icone: Icons.cancel_outlined,
-                    cor: AppColors.erro,
-                    onTap: () =>
-                        context.push(RoutePaths.coletadorMinhasColetas),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.realizadas,
+            label: 'Realizadas',
+            linkLabel: 'Ver agenda',
+            imagePath: 'assets/icons/novo.png',
+            icone: Icons.inventory_2_outlined,
+            cor: AppColors.amarelo,
+            onTap: () => context.push(RoutePaths.coletadorMinhasColetas),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.agendadas,
+            label: 'Em coleta',
+            linkLabel: 'Ver agenda',
+            imagePath: 'assets/icons/caixa.png',
+            icone: Icons.inventory_2_outlined,
+            cor: AppColors.marron,
+            onTap: () => context.push(RoutePaths.coletadorMinhasColetas),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.emAndamento,
+            label: 'Em trânsito',
+            linkLabel: 'Ver rotas',
+            imagePath: 'assets/icons/caminhao-de-carga.png',
+            icone: Icons.local_shipping_outlined,
+            cor: AppColors.azulInstitucional,
+            onTap: () => context.push(RoutePaths.coletadorMapaRota),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.concluidas,
+            label: 'Concluídas',
+            linkLabel: 'Ver concluídas',
+            imagePath: 'assets/icons/verificar.png',
+            icone: Icons.check_circle_outline,
+            cor: AppColors.sucesso,
+            onTap: () => context.push(RoutePaths.coletadorMinhasColetas),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.canceladas,
+            label: 'Canceladas',
+            linkLabel: 'Ver detalhes',
+            imagePath: 'assets/icons/cancelar.png',
+            icone: Icons.cancel_outlined,
+            cor: AppColors.erro,
+            onTap: () => context.push(RoutePaths.coletadorMinhasColetas),
           ),
         ],
       ),
@@ -555,36 +670,29 @@ class _ResumoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      height: 30,
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 5),
       decoration: BoxDecoration(
         color: cor.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                imagePath,
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$valor',
-                style: AppTextStyles.titulo.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+          Image.asset(imagePath, width: 50, height: 50, fit: BoxFit.contain),
+          // Spacer(),
+          SizedBox(width: 10),
+          Text(
+            '$valor',
+            style: AppTextStyles.titulo.copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(height: 2),
+
+          const SizedBox(width: 4),
           Text(label, style: AppTextStyles.legenda.copyWith(fontSize: 11)),
-          const SizedBox(height: 8),
+          SizedBox(width: 10),
           GestureDetector(
             onTap: onTap,
             child: Row(
@@ -592,7 +700,7 @@ class _ResumoItem extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    linkLabel,
+                    'Ver',
                     style: AppTextStyles.legenda.copyWith(
                       fontSize: 11,
                       color: cor,

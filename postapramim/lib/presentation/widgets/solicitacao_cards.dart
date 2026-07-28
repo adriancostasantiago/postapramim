@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
+import 'package:postapramim/core/constants/app_constants.dart';
 import 'package:postapramim/domain/solicitacoes/entities/solicitacao_entity.dart';
 import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_provider.dart';
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
@@ -19,13 +20,13 @@ String formatarDataHoraCard(DateTime dt) {
 
 String formatarHorarioCard(SolicitacaoEntity s) {
   String dois(int n) => n.toString().padLeft(2, '0');
+  final c = s.criadoEm;
   if (s.janelaColetaInicio != null && s.janelaColetaFim != null) {
     final ini = s.janelaColetaInicio!;
     final fim = s.janelaColetaFim!;
-    return '${dois(ini.hour)}:${dois(ini.minute)} - ${dois(fim.hour)}:${dois(fim.minute)}';
+    return 'Criada em ${dois(c.day)}/${dois(c.month)}/${c.year} às ${dois(c.hour)}:${dois(c.minute)}\nColetar às ${dois(ini.hour)}:${dois(ini.minute)} - ${dois(fim.hour)}:${dois(fim.minute)}';
   }
-  final c = s.criadoEm;
-  return 'Criada às ${dois(c.hour)}:${dois(c.minute)}';
+  return 'Criada em ${dois(c.day)}/${dois(c.month)}/${c.year} às ${dois(c.hour)}:${dois(c.minute)}';
 }
 
 extension GrupoStatusExibicaoCardX on GrupoStatusExibicao {
@@ -52,6 +53,25 @@ extension GrupoStatusExibicaoCardX on GrupoStatusExibicao {
     GrupoStatusExibicao.concluida => Icons.check_circle_outline,
     GrupoStatusExibicao.cancelada => Icons.cancel_outlined,
   };
+}
+
+String getStatusImage(StatusSolicitacao status) {
+  switch (status) {
+    case StatusSolicitacao.solicitacaoRealizada:
+      return 'assets/icons/novo.png';
+
+    case StatusSolicitacao.aguardandoColeta:
+      return 'assets/icons/caixa.png';
+
+    case StatusSolicitacao.emTransito:
+      return 'assets/icons/caminhao-de-carga.png';
+
+    case StatusSolicitacao.concluida:
+      return 'assets/icons/verificar.png';
+
+    case StatusSolicitacao.cancelada:
+      return 'assets/icons/cancelar.png';
+  }
 }
 
 /// Card no padrão visual da Home do cliente.
@@ -131,6 +151,7 @@ class SolicitacaoClienteCard extends StatelessWidget {
                   ],
                   const SizedBox(height: 2),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(
                         Icons.access_time,
@@ -229,14 +250,19 @@ class ColetaCard extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: grupo.corCard.withValues(alpha: .12),
-                          child: Icon(
-                            grupo.iconeCard,
-                            size: 20,
-                            color: grupo.corCard,
-                          ),
+                        // CircleAvatar(
+                        //   radius: 22,
+                        //   backgroundColor: grupo.corCard.withValues(alpha: .12),
+                        //   child: Icon(
+                        //     grupo.iconeCard,
+                        //     size: 20,
+                        //     color: grupo.corCard,
+                        //   ),
+                        // ),
+                        Image.asset(
+                          getStatusImage(solicitacao.status),
+                          height: 20,
+                          width: 20,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

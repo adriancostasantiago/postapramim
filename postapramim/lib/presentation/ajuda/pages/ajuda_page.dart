@@ -112,16 +112,16 @@ class AjudaPage extends StatelessWidget {
       ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.branco,
-        indicatorColor: AppColors.amarelo,
+        indicatorColor: AppColors.darkFundo,
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
           if (states.contains(WidgetState.selected)) {
             return AppTextStyles.legenda.copyWith(
-              color: AppColors.amarelo,
+              color: AppColors.darkFundo,
               fontWeight: FontWeight.bold,
             );
           }
 
-          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+          return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
         }),
         selectedIndex: 2,
         onDestinationSelected: (i) {

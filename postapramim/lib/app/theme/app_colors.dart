@@ -9,6 +9,8 @@ class AppColors {
   static const Color amarelo = Color(0xFFFEB003);
   static const Color amareloEscuro = Color(0xFFE6AC00);
   static const Color amareloClaro = Color(0xFFFDD365);
+  static const Color marron = Color(0xFF864303);
+  static const Color marromClaro = Color(0xFF864303);
   static const Color azulInstitucional = Color(0xFF0B3D91);
   static const Color azulClaro = Color(0xFF4A73C4);
 
@@ -33,8 +35,8 @@ class AppColors {
   static Color statusColor(String status) => switch (status) {
     'concluida' => sucesso,
     'cancelada' => erro,
-    'solicitacao_realizada' => cinzaTexto,
-    'aguardando_coleta' => alerta,
+    'solicitacao_realizada' => alerta,
+    'aguardando_coleta' => marron,
     'em_transito' => azulInstitucional,
     _ => cinzaTexto,
   };

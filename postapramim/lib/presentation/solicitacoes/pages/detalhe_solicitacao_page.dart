@@ -10,6 +10,9 @@ import 'package:postapramim/presentation/solicitacoes/providers/usuario_publico_
 import 'package:postapramim/presentation/solicitacoes/status_solicitacao_ui.dart';
 import 'package:postapramim/shared/widgets/state_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
+import 'package:postapramim/app/router/route_paths.dart';
+import 'package:postapramim/shared/widgets/confirm_dialog.dart';
 
 /// Tela de detalhe de uma solicitação — visão do cliente.
 ///
@@ -733,26 +736,22 @@ Future<void> _confirmarCancelamento(
   WidgetRef ref,
   String id,
 ) async {
-  final confirmou = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Cancelar solicitação?'),
-      content: const Text('Essa ação não pode ser desfeita.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Voltar'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Cancelar solicitação'),
-        ),
-      ],
-    ),
+  final confirmou = await showAppConfirmDialog(
+    context,
+    icone: Icons.cancel_outlined,
+    cor: AppColors.erro,
+    titulo: 'Cancelar solicitação?',
+    mensagem: 'Essa ação não pode ser desfeita.',
+    labelConfirmar: 'Cancelar solicitação',
   );
 
-  if (confirmou == true) {
-    await ref.read(solicitacoesControllerProvider.notifier).cancelar(id);
+  if (confirmou) {
+    final ok = await ref
+        .read(solicitacoesControllerProvider.notifier)
+        .cancelar(id);
+    if (ok && context.mounted) {
+      context.go(RoutePaths.clienteHome);
+    }
   }
 }
 
