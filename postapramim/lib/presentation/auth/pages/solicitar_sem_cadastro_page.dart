@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
 import 'package:postapramim/app/theme/app_text_styles.dart';
@@ -58,6 +61,7 @@ class _SolicitarSemCadastroPageState
   final _bairroCtrl = TextEditingController();
   final _cidadeCtrl = TextEditingController();
   String? _estado;
+  bool _buscandoCep = false;
   String get mensagem =>
       '''
 📦 *Posta Pra Mim*
@@ -136,9 +140,50 @@ Via APP v${AppConstants.versaoApp}
   }
 
   Future<void> _buscarEndereco() async {
-    if (_cepCtrl.text.trim().isEmpty) return;
-    // TODO: BuscarEnderecoPorCepUsecase (ex.: ViaCEP) preenchendo
-    // _enderecoCtrl / _bairroCtrl / _cidadeCtrl / _estado.
+    final cep = _cepCtrl.text.trim();
+    if (cep.length != 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Digite um CEP válido com 8 dígitos.')),
+      );
+      return;
+    }
+
+    setState(() => _buscandoCep = true);
+    try {
+      final resposta = await http
+          .get(Uri.parse('https://viacep.com.br/ws/$cep/json/'))
+          .timeout(const Duration(seconds: 10));
+
+      if (resposta.statusCode != 200) {
+        throw Exception('Falha ao consultar o CEP.');
+      }
+
+      final dados = jsonDecode(resposta.body) as Map<String, dynamic>;
+      if (dados['erro'] == true) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('CEP não encontrado.')));
+        return;
+      }
+
+      setState(() {
+        _enderecoCtrl.text = (dados['logradouro'] as String?) ?? '';
+        _bairroCtrl.text = (dados['bairro'] as String?) ?? '';
+        _cidadeCtrl.text = (dados['localidade'] as String?) ?? '';
+        final uf = (dados['uf'] as String?)?.toUpperCase();
+        if (uf != null && _estados.contains(uf)) {
+          _estado = uf;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao buscar o CEP: $e')));
+    } finally {
+      if (mounted) setState(() => _buscandoCep = false);
+    }
   }
 
   // Future<void> _solicitar() async {
@@ -272,11 +317,12 @@ Via APP v${AppConstants.versaoApp}
                                   LengthLimitingTextInputFormatter(8),
                                 ],
                                 validator: Validators.cep,
+                                enabled: !_buscandoCep,
                               ),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
-                              onTap: _buscarEndereco,
+                              onTap: _buscandoCep ? null : _buscarEndereco,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -287,12 +333,20 @@ Via APP v${AppConstants.versaoApp}
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.search,
-                                    size: 18,
-                                    color: AppColors.azulInstitucional,
-                                  ),
+                                  const SizedBox(width: 6),
+                                  _buscandoCep
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.search,
+                                          size: 18,
+                                          color: AppColors.azulInstitucional,
+                                        ),
                                 ],
                               ),
                             ),
@@ -509,8 +563,6 @@ class _Cabecalho extends StatelessWidget {
   }
 }
 
-/// Card de campo com ícone circular à esquerda e label flutuante fixo
-/// acima do valor/placeholder, no padrão da tela "Nova solicitação".
 class _CampoCard extends StatelessWidget {
   final IconData icone;
   final String label;
@@ -519,6 +571,7 @@ class _CampoCard extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
+  final bool enabled;
 
   const _CampoCard({
     required this.icone,
@@ -528,6 +581,7 @@ class _CampoCard extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -548,6 +602,7 @@ class _CampoCard extends StatelessWidget {
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               validator: validator,
+              enabled: enabled,
               style: AppTextStyles.subtitulo.copyWith(fontSize: 15),
               decoration: InputDecoration(
                 isDense: true,
@@ -600,6 +655,7 @@ class _CampoCardDropdown extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: DropdownButtonFormField<String>(
+              dropdownColor: AppColors.branco,
               initialValue: valor,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down, size: 20),

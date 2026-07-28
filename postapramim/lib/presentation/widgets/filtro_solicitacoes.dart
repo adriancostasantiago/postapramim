@@ -48,12 +48,37 @@ class FiltroSolicitacoesBar extends StatelessWidget {
 
   Future<void> _selecionarPeriodo(BuildContext context) async {
     final agora = DateTime.now();
+    // final resultado = await showDateRangePicker(
+    //   context: context,
+    //   firstDate: DateTime(agora.year - 2),
+    //   lastDate: DateTime(agora.year + 1),
+    //   initialDateRange: filtro.periodo,
+    //   locale: const Locale('pt', 'BR'),
+    // );
     final resultado = await showDateRangePicker(
       context: context,
       firstDate: DateTime(agora.year - 2),
       lastDate: DateTime(agora.year + 1),
       initialDateRange: filtro.periodo,
       locale: const Locale('pt', 'BR'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
+            colorScheme: const ColorScheme.light(
+              surface: Colors.white,
+              primary: Color(0xFF864303),
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+            datePickerTheme: const DatePickerThemeData(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (resultado != null) onChanged(filtro.copyWith(periodo: resultado));
   }
@@ -149,7 +174,7 @@ class FiltroSolicitacoesBar extends StatelessWidget {
       case GrupoStatusExibicao.realizada:
         return 'Realizada';
       case GrupoStatusExibicao.coleta:
-        return 'Aguardando';
+        return 'Em Coleta';
       case GrupoStatusExibicao.emtransito:
         return 'Em trânsito';
       case GrupoStatusExibicao.concluida:

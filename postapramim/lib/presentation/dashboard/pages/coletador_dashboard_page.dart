@@ -138,59 +138,59 @@ class _ColetadorDashboardPageState
           },
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.branco,
-        indicatorColor: AppColors.darkFundo,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.legenda.copyWith(
-              color: AppColors.darkFundo,
-              fontWeight: FontWeight.bold,
-            );
-          }
+      // bottomNavigationBar: NavigationBar(
+      //   backgroundColor: AppColors.branco,
+      //   indicatorColor: AppColors.darkFundo,
+      //   labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+      //     if (states.contains(WidgetState.selected)) {
+      //       return AppTextStyles.legenda.copyWith(
+      //         color: AppColors.darkFundo,
+      //         fontWeight: FontWeight.bold,
+      //       );
+      //     }
 
-          return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
-        }),
-        selectedIndex: 0,
-        onDestinationSelected: (i) {
-          switch (i) {
-            case 1:
-              context.push(RoutePaths.coletadorMinhasColetas);
-              break;
-            // case 2:
-            //   context.push(RoutePaths.coletadorMapaRota);
-            //   break;
-            case 2:
-              context.push(RoutePaths.ajuda);
-              break;
-            case 3:
-              context.push(RoutePaths.perfil);
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: AppColors.branco),
-            label: 'Início',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
-            label: 'Solicitações',
-          ),
-          // NavigationDestination(
-          //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
-          //   label: 'Rotas',
-          // ),
-          NavigationDestination(
-            icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
-            label: 'Ajuda',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
-            label: 'Conta',
-          ),
-        ],
-      ),
+      //     return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
+      //   }),
+      //   selectedIndex: 0,
+      //   onDestinationSelected: (i) {
+      //     switch (i) {
+      //       case 1:
+      //         context.push(RoutePaths.coletadorMinhasColetas);
+      //         break;
+      //       // case 2:
+      //       //   context.push(RoutePaths.coletadorMapaRota);
+      //       //   break;
+      //       case 2:
+      //         context.push(RoutePaths.ajuda);
+      //         break;
+      //       case 3:
+      //         context.push(RoutePaths.perfil);
+      //         break;
+      //     }
+      //   },
+      //   destinations: const [
+      //     NavigationDestination(
+      //       icon: Icon(Icons.home_outlined, color: AppColors.branco),
+      //       label: 'Início',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
+      //       label: 'Solicitações',
+      //     ),
+      //     // NavigationDestination(
+      //     //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
+      //     //   label: 'Rotas',
+      //     // ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
+      //       label: 'Ajuda',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
+      //       label: 'Conta',
+      //     ),
+      //   ],
+      // ),
     );
   }
 }
@@ -222,7 +222,7 @@ class _Cabecalho extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 20,
+          top: 0,
           right: 0,
           child: IgnorePointer(
             child: Image.asset(
@@ -232,7 +232,7 @@ class _Cabecalho extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

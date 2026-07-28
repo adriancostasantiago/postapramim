@@ -98,7 +98,12 @@ class _Conteudo extends ConsumerWidget {
                           _EnderecoCard(solicitacao: solicitacao),
                           if (solicitacao.observacoes?.isNotEmpty == true) ...[
                             const SizedBox(height: 14),
-                            _ObservacoesCard(texto: solicitacao.observacoes!),
+                            _ObservacoesCard(
+                              texto: solicitacao.observacoes!,
+                              cor: AppColors.statusColor(
+                                solicitacao.status.valorBanco,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -125,6 +130,24 @@ class _Conteudo extends ConsumerWidget {
 class _CabecalhoDetalhe extends StatelessWidget {
   final SolicitacaoEntity solicitacao;
   const _CabecalhoDetalhe({required this.solicitacao});
+  String getStatusImage(StatusSolicitacao status) {
+    switch (status) {
+      case StatusSolicitacao.solicitacaoRealizada:
+        return 'assets/images/ilustracao_detalhe_solicitacao_nova.png';
+
+      case StatusSolicitacao.aguardandoColeta:
+        return 'assets/images/ilustracao_detalhe_solicitacao_coleta.png';
+
+      case StatusSolicitacao.emTransito:
+        return 'assets/images/ilustracao_detalhe_solicitacao_em_transito.png';
+
+      case StatusSolicitacao.concluida:
+        return 'assets/images/ilustracao_detalhe_solicitacao_concluida.png';
+
+      case StatusSolicitacao.cancelada:
+        return 'assets/images/ilustracao_detalhe_solicitacao_cancelada.png';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,10 +166,7 @@ class _CabecalhoDetalhe extends StatelessWidget {
           top: 60,
           right: 0,
           child: IgnorePointer(
-            child: Image.asset(
-              'assets/images/ilustracao_detalhe_solicitacao.png',
-              height: 200,
-            ),
+            child: Image.asset(getStatusImage(solicitacao.status), height: 200),
           ),
         ),
         SafeArea(
@@ -233,14 +253,19 @@ class _StatusCard extends StatelessWidget {
   final SolicitacaoEntity solicitacao;
   const _StatusCard({required this.solicitacao});
 
-  static const _etapas = [
+  static final _etapas = [
     (
-      label: 'Aguardando',
+      label: 'Aceita',
+      icone: Icons.handshake_outlined,
+      grupo: GrupoStatusExibicao.coleta,
+    ),
+    (
+      label: 'Em coleta',
       icone: Icons.inventory_2_outlined,
       grupo: GrupoStatusExibicao.coleta,
     ),
     (
-      label: 'Em andamento',
+      label: 'Em trânsito',
       icone: Icons.local_shipping_outlined,
       grupo: GrupoStatusExibicao.emtransito,
     ),
@@ -249,6 +274,12 @@ class _StatusCard extends StatelessWidget {
       icone: Icons.check,
       grupo: GrupoStatusExibicao.concluida,
     ),
+
+    // (
+    //   label: 'Cancelada',
+    //   icone: Icons.cancel_outlined,
+    //   grupo: GrupoStatusExibicao.cancelada,
+    // ),
   ];
 
   @override
@@ -256,6 +287,8 @@ class _StatusCard extends StatelessWidget {
     final grupoAtual = solicitacao.status.grupoExibicao;
     final inicio = solicitacao.janelaColetaInicio;
     final fim = solicitacao.janelaColetaFim;
+
+    final cor = AppColors.statusColor(solicitacao.status.valorBanco);
 
     if (grupoAtual == GrupoStatusExibicao.cancelada) {
       return Container(
@@ -313,6 +346,7 @@ class _StatusCard extends StatelessWidget {
                           etapa: _etapas[i],
                           concluida: indiceAtual >= 0 && i < indiceAtual,
                           ativa: i == indiceAtual,
+                          cor: cor,
                         ),
                         if (i != _etapas.length - 1)
                           Padding(
@@ -333,7 +367,7 @@ class _StatusCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.amareloClaro.withValues(alpha: .5),
+                      color: cor.withValues(alpha: .15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
@@ -342,15 +376,11 @@ class _StatusCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.access_time,
-                              size: 16,
-                              color: AppColors.amarelo,
-                            ),
+                            Icon(Icons.access_time, size: 16, color: cor),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Horário',
+                                'Melhor Horário',
                                 style: AppTextStyles.legenda.copyWith(
                                   fontSize: 12,
                                 ),
@@ -366,17 +396,13 @@ class _StatusCard extends StatelessWidget {
                           style: AppTextStyles.subtitulo.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.amarelo,
+                            color: AppColors.darkFundo,
                           ),
                         ),
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.info_outline,
-                              size: 16,
-                              color: AppColors.amarelo,
-                            ),
+                            Icon(Icons.info_outline, size: 16, color: cor),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
@@ -411,21 +437,72 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
+// class _EtapaTimeline extends StatelessWidget {
+//   final ({String label, IconData icone, GrupoStatusExibicao grupo}) etapa;
+//   final bool ativa;
+//   final bool concluida;
+
+//   const _EtapaTimeline({
+//     required this.etapa,
+//     required this.ativa,
+//     required this.concluida,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final destacada = ativa || concluida;
+//     final cor = destacada ? _corDoGrupo(etapa.grupo) : AppColors.cinzaBorda;
+
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.center,
+//       children: [
+//         Container(
+//           width: 38,
+//           height: 38,
+//           alignment: Alignment.center,
+//           decoration: BoxDecoration(
+//             color: destacada ? cor : AppColors.branco,
+//             shape: BoxShape.circle,
+//             border: Border.all(color: cor, width: destacada ? 0 : 1.5),
+//           ),
+//           child: Icon(
+//             concluida ? Icons.check : etapa.icone,
+//             size: 18,
+//             color: destacada ? AppColors.branco : cor,
+//           ),
+//         ),
+//         const SizedBox(width: 12),
+//         Expanded(
+//           child: Text(
+//             etapa.label,
+//             style: AppTextStyles.corpo.copyWith(
+//               fontWeight: ativa ? FontWeight.w700 : FontWeight.w400,
+//               color: destacada ? AppColors.darkFundo : AppColors.cinzaTexto,
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
 class _EtapaTimeline extends StatelessWidget {
   final ({String label, IconData icone, GrupoStatusExibicao grupo}) etapa;
   final bool ativa;
   final bool concluida;
+  final Color cor;
 
   const _EtapaTimeline({
     required this.etapa,
     required this.ativa,
     required this.concluida,
+    required this.cor,
   });
 
   @override
   Widget build(BuildContext context) {
     final destacada = ativa || concluida;
-    final cor = destacada ? _corDoGrupo(etapa.grupo) : AppColors.cinzaBorda;
+    // final cor = destacada ? _corDoGrupo(etapa.grupo) : AppColors.cinzaBorda;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -465,9 +542,14 @@ class _CartaoInfo extends StatelessWidget {
   final Widget conteudo;
   final Widget? acao;
   final VoidCallback? onTap;
+  final Color cor;
 
-  const _CartaoInfo({required this.icone, required this.conteudo, this.acao})
-    : onTap = null;
+  const _CartaoInfo({
+    required this.icone,
+    required this.conteudo,
+    required this.cor,
+    this.acao,
+  }) : onTap = null;
 
   @override
   Widget build(BuildContext context) {
@@ -486,8 +568,8 @@ class _CartaoInfo extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.amarelo.withValues(alpha: .15),
-              child: Icon(icone, color: AppColors.amarelo),
+              backgroundColor: cor.withValues(alpha: .15),
+              child: Icon(icone, color: cor),
             ),
             const SizedBox(width: 14),
             Expanded(child: conteudo),
@@ -510,10 +592,12 @@ class _ColetadorCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coletadorId = solicitacao.coletadorId;
+    final cor = AppColors.statusColor(solicitacao.status.valorBanco);
 
     if (coletadorId == null) {
       return _CartaoInfo(
         icone: Icons.local_shipping_outlined,
+        cor: cor,
         conteudo: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -535,6 +619,7 @@ class _ColetadorCard extends ConsumerWidget {
 
     return _CartaoInfo(
       icone: Icons.local_shipping_outlined,
+      cor: cor,
       conteudo: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -572,8 +657,11 @@ class _EnderecoCard extends StatelessWidget {
     // solicitação (avulsa ou cliente cadastrado).
     final texto = solicitacao.enderecoResumo ?? 'Endereço não informado';
 
+    final cor = AppColors.statusColor(solicitacao.status.valorBanco);
+
     return _CartaoInfo(
       icone: Icons.location_on_outlined,
+      cor: cor,
       conteudo: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -596,13 +684,9 @@ class _EnderecoCard extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.amarelo),
+                  border: Border.all(color: cor),
                 ),
-                child: const Icon(
-                  Icons.map_outlined,
-                  size: 18,
-                  color: AppColors.amarelo,
-                ),
+                child: Icon(Icons.map_outlined, size: 18, color: cor),
               ),
             ),
     );
@@ -611,14 +695,15 @@ class _EnderecoCard extends StatelessWidget {
 
 class _ObservacoesCard extends StatelessWidget {
   final String texto;
-  const _ObservacoesCard({required this.texto});
+  final Color cor;
+  const _ObservacoesCard({required this.texto, required this.cor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.amareloClaro.withValues(alpha: .4),
+        color: cor.withValues(alpha: .4),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -626,11 +711,8 @@ class _ObservacoesCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: AppColors.amarelo.withValues(alpha: .2),
-            child: const Icon(
-              Icons.description_outlined,
-              color: AppColors.amarelo,
-            ),
+            backgroundColor: cor.withValues(alpha: .2),
+            child: Icon(Icons.description_outlined, color: cor),
           ),
           const SizedBox(width: 14),
           Expanded(

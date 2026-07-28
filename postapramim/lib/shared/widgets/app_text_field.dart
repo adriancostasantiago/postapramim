@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:postapramim/app/theme/app_colors.dart';
+import 'package:postapramim/app/theme/app_text_styles.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
@@ -29,7 +31,7 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label, style: AppTextStyles.corpo),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -37,6 +39,7 @@ class AppTextField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           enabled: enabled,
+          style: const TextStyle(color: AppColors.darkFundo),
           decoration: InputDecoration(
             hintText: hint,
             suffixIcon: suffixIcon,

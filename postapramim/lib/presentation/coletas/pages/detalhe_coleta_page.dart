@@ -148,7 +148,7 @@ class _CabecalhoDetalhe extends StatelessWidget {
         return 'assets/images/ilustracao_detalhe_solicitacao_nova.png';
 
       case StatusSolicitacao.aguardandoColeta:
-        return 'assets/images/ilustracao_detalhe_solicitacao.png';
+        return 'assets/images/ilustracao_detalhe_solicitacao_coleta.png';
 
       case StatusSolicitacao.emTransito:
         return 'assets/images/ilustracao_detalhe_solicitacao_em_transito.png';
@@ -382,7 +382,7 @@ class _StatusDaColetaCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: cor.withValues(alpha: .5),
+                      color: cor.withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
@@ -395,7 +395,7 @@ class _StatusDaColetaCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Horário',
+                                'Melhor Horário',
                                 style: AppTextStyles.legenda.copyWith(
                                   fontSize: 12,
                                 ),
@@ -822,11 +822,14 @@ class _BotoesAcao extends ConsumerWidget {
                 precisaAceitar ? Icons.check_circle_outline : Icons.sync_alt,
                 color: AppColors.branco,
               ),
-              label: Text(
-                precisaAceitar ? 'Aceitar solicitação' : 'Atualizar status',
-                style: AppTextStyles.botao.copyWith(
-                  color: AppColors.branco,
-                  fontWeight: FontWeight.w800,
+              label: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  precisaAceitar ? 'Aceitar' : 'Atualizar status',
+                  style: AppTextStyles.botao.copyWith(
+                    color: AppColors.branco,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               style: ElevatedButton.styleFrom(

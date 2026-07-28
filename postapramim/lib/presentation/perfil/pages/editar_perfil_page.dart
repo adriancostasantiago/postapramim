@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:postapramim/app/router/route_paths.dart';
 import 'package:postapramim/app/theme/app_colors.dart';
+import 'package:postapramim/app/theme/app_text_styles.dart';
 import 'package:postapramim/core/utils/validators.dart';
 import 'package:postapramim/presentation/auth/providers/auth_providers.dart';
 import 'package:postapramim/presentation/enderecos/providers/enderecos_providers.dart';
@@ -68,7 +69,15 @@ class _EditarPerfilPageState extends ConsumerState<EditarPerfilPage> {
         : ref.watch(enderecoPrincipalClienteProvider(usuario.id));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar perfil')),
+      backgroundColor: AppColors.branco,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: AppColors.preto),
+        title: Text(
+          'Editar perfil',
+          style: AppTextStyles.titulo.copyWith(color: AppColors.preto),
+        ),
+        backgroundColor: AppColors.branco,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -104,10 +113,7 @@ class _EditarPerfilPageState extends ConsumerState<EditarPerfilPage> {
               const SizedBox(height: 32),
               const Divider(),
               const SizedBox(height: 12),
-              const Text(
-                'Endereço',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-              ),
+              const Text('Endereço', style: AppTextStyles.subtitulo),
               const SizedBox(height: 12),
               if (enderecoAsync != null)
                 enderecoAsync.when(
@@ -115,12 +121,19 @@ class _EditarPerfilPageState extends ConsumerState<EditarPerfilPage> {
                   error: (_, __) => const Text('Erro ao carregar endereço'),
                   data: (endereco) => ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.location_on_outlined),
+                    leading: const Icon(
+                      Icons.location_on_outlined,
+                      color: AppColors.darkFundo,
+                    ),
                     title: Text(
                       endereco?.enderecoFormatado ??
                           'Nenhum endereço cadastrado',
+                      style: AppTextStyles.corpo,
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.darkFundo,
+                    ),
                     onTap: () async {
                       final resultado = await context.push<bool>(
                         RoutePaths.clienteEnderecoForm,

@@ -32,15 +32,15 @@ String formatarHorarioCard(SolicitacaoEntity s) {
 extension GrupoStatusExibicaoCardX on GrupoStatusExibicao {
   String get labelCard => switch (this) {
     GrupoStatusExibicao.realizada => 'Realizada',
-    GrupoStatusExibicao.coleta => 'Aguardando',
+    GrupoStatusExibicao.coleta => 'Em Coleta',
     GrupoStatusExibicao.emtransito => 'Em trânsito',
     GrupoStatusExibicao.concluida => 'Concluída',
     GrupoStatusExibicao.cancelada => 'Cancelada',
   };
 
   Color get corCard => switch (this) {
-    GrupoStatusExibicao.realizada => AppColors.cinzaTexto,
-    GrupoStatusExibicao.coleta => AppColors.amarelo,
+    GrupoStatusExibicao.realizada => AppColors.amarelo,
+    GrupoStatusExibicao.coleta => AppColors.marron,
     GrupoStatusExibicao.emtransito => AppColors.azulInstitucional,
     GrupoStatusExibicao.concluida => Colors.green,
     GrupoStatusExibicao.cancelada => AppColors.erro,

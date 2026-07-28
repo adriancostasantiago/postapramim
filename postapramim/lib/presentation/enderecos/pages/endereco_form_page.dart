@@ -646,6 +646,8 @@ class _CampoUf extends StatelessWidget {
           Expanded(
             child: DropdownButtonFormField<String>(
               initialValue: valor,
+
+              dropdownColor: AppColors.branco,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down),
               validator: (v) =>

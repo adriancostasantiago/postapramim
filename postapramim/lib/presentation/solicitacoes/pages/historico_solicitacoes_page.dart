@@ -29,10 +29,10 @@ class _HistoricoSolicitacoesPageState
     return Scaffold(
       backgroundColor: AppColors.branco,
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: AppColors.amarelo),
+        iconTheme: const IconThemeData(color: AppColors.darkFundo),
         title: Text(
           'Minhas solicitações',
-          style: AppTextStyles.titulo.copyWith(color: AppColors.amarelo),
+          style: AppTextStyles.titulo.copyWith(color: AppColors.darkFundo),
         ),
         backgroundColor: AppColors.branco,
       ),
@@ -77,7 +77,7 @@ class _HistoricoSolicitacoesPageState
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final s = filtrada[index];
-                      return SolicitacaoClienteCard(
+                      return ColetaCard(
                         solicitacao: s,
                         onTap: () => context.push(
                           RoutePaths.clienteDetalheSolicitacao.replaceFirst(

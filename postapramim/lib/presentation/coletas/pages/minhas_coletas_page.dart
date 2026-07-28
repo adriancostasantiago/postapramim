@@ -94,59 +94,59 @@ class _MinhasColetasPageState extends ConsumerState<MinhasColetasPage> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.branco,
-        indicatorColor: AppColors.darkFundo,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.legenda.copyWith(
-              color: AppColors.darkFundo,
-              fontWeight: FontWeight.bold,
-            );
-          }
+      // bottomNavigationBar: NavigationBar(
+      //   backgroundColor: AppColors.branco,
+      //   indicatorColor: AppColors.darkFundo,
+      //   labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+      //     if (states.contains(WidgetState.selected)) {
+      //       return AppTextStyles.legenda.copyWith(
+      //         color: AppColors.darkFundo,
+      //         fontWeight: FontWeight.bold,
+      //       );
+      //     }
 
-          return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
-        }),
-        selectedIndex: 1,
-        onDestinationSelected: (i) {
-          switch (i) {
-            case 0:
-              context.push(RoutePaths.coletadorDashboard);
-              break;
-            // case 2:
-            //   context.push(RoutePaths.coletadorMapaRota);
-            //   break;
-            case 2:
-              context.push(RoutePaths.ajuda);
-              break;
-            case 3:
-              context.push(RoutePaths.perfil);
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: AppColors.cinzaTexto),
-            label: 'Início',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined, color: AppColors.branco),
-            label: 'Solicitações',
-          ),
-          // NavigationDestination(
-          //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
-          //   label: 'Rotas',
-          // ),
-          NavigationDestination(
-            icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
-            label: 'Ajuda',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
-            label: 'Conta',
-          ),
-        ],
-      ),
+      //     return AppTextStyles.legenda.copyWith(color: AppColors.darkFundo);
+      //   }),
+      //   selectedIndex: 1,
+      //   onDestinationSelected: (i) {
+      //     switch (i) {
+      //       case 0:
+      //         context.push(RoutePaths.coletadorDashboard);
+      //         break;
+      //       // case 2:
+      //       //   context.push(RoutePaths.coletadorMapaRota);
+      //       //   break;
+      //       case 2:
+      //         context.push(RoutePaths.ajuda);
+      //         break;
+      //       case 3:
+      //         context.push(RoutePaths.perfil);
+      //         break;
+      //     }
+      //   },
+      //   destinations: const [
+      //     NavigationDestination(
+      //       icon: Icon(Icons.home_outlined, color: AppColors.cinzaTexto),
+      //       label: 'Início',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.inventory_2_outlined, color: AppColors.branco),
+      //       label: 'Solicitações',
+      //     ),
+      //     // NavigationDestination(
+      //     //   icon: Icon(Icons.map_outlined, color: AppColors.cinzaTexto),
+      //     //   label: 'Rotas',
+      //     // ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
+      //       label: 'Ajuda',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
+      //       label: 'Conta',
+      //     ),
+      //   ],
+      // ),
     );
   }
 }

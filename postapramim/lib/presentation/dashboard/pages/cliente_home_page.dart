@@ -85,7 +85,7 @@ class _ClienteHomePageState extends ConsumerState<ClienteHomePage> {
                       child: Text(
                         'Ver todas',
                         style: AppTextStyles.corpo.copyWith(
-                          color: AppColors.azulInstitucional,
+                          color: AppColors.darkFundo,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -97,7 +97,7 @@ class _ClienteHomePageState extends ConsumerState<ClienteHomePage> {
                   const _ListaVazia()
                 else
                   for (final s in recentes) ...[
-                    SolicitacaoClienteCard(
+                    ColetaCard(
                       solicitacao: s,
                       onTap: () => context.push(
                         RoutePaths.clienteDetalheSolicitacao.replaceFirst(
@@ -113,52 +113,52 @@ class _ClienteHomePageState extends ConsumerState<ClienteHomePage> {
           },
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.branco,
-        indicatorColor: AppColors.amarelo,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.legenda.copyWith(
-              color: AppColors.amarelo,
-              fontWeight: FontWeight.bold,
-            );
-          }
+      // bottomNavigationBar: NavigationBar(
+      //   backgroundColor: AppColors.branco,
+      //   indicatorColor: AppColors.amarelo,
+      //   labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+      //     if (states.contains(WidgetState.selected)) {
+      //       return AppTextStyles.legenda.copyWith(
+      //         color: AppColors.amarelo,
+      //         fontWeight: FontWeight.bold,
+      //       );
+      //     }
 
-          return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
-        }),
-        selectedIndex: 0,
-        onDestinationSelected: (i) {
-          switch (i) {
-            case 1:
-              context.push(RoutePaths.clienteHistorico);
-              break;
-            case 2:
-              context.push(RoutePaths.ajuda);
-              break;
-            case 3:
-              context.push(RoutePaths.perfil);
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: AppColors.branco),
-            label: 'Início',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
-            label: 'Solicitações',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
-            label: 'Ajuda',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
-            label: 'Conta',
-          ),
-        ],
-      ),
+      //     return AppTextStyles.legenda.copyWith(color: AppColors.cinzaTexto);
+      //   }),
+      //   selectedIndex: 0,
+      //   onDestinationSelected: (i) {
+      //     switch (i) {
+      //       case 1:
+      //         context.push(RoutePaths.clienteHistorico);
+      //         break;
+      //       case 2:
+      //         context.push(RoutePaths.ajuda);
+      //         break;
+      //       case 3:
+      //         context.push(RoutePaths.perfil);
+      //         break;
+      //     }
+      //   },
+      //   destinations: const [
+      //     NavigationDestination(
+      //       icon: Icon(Icons.home_outlined, color: AppColors.branco),
+      //       label: 'Início',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.inventory_2_outlined, color: AppColors.cinzaTexto),
+      //       label: 'Solicitações',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.help_outline, color: AppColors.cinzaTexto),
+      //       label: 'Ajuda',
+      //     ),
+      //     NavigationDestination(
+      //       icon: Icon(Icons.person_outline, color: AppColors.cinzaTexto),
+      //       label: 'Conta',
+      //     ),
+      //   ],
+      // ),
     );
   }
 }
@@ -265,25 +265,30 @@ class _ListaVazia extends StatelessWidget {
 }
 
 class _ResumoDevolucoes {
+  final int realizadas;
   final int aguardando;
   final int emTransito;
   final int concluidas;
+  final int canceladas;
 
   const _ResumoDevolucoes({
+    required this.realizadas,
     required this.aguardando,
     required this.emTransito,
     required this.concluidas,
+    required this.canceladas,
   });
 
   factory _ResumoDevolucoes.deLista(List<SolicitacaoEntity> lista) {
-    var realizada = 0;
+    var realizadas = 0;
     var aguardando = 0;
     var emTransito = 0;
     var concluidas = 0;
+    var canceladas = 0;
     for (final s in lista) {
       switch (s.status.grupoExibicao) {
         case GrupoStatusExibicao.realizada:
-          realizada++;
+          realizadas++;
           break;
         case GrupoStatusExibicao.coleta:
           aguardando++;
@@ -295,13 +300,16 @@ class _ResumoDevolucoes {
           concluidas++;
           break;
         case GrupoStatusExibicao.cancelada:
+          canceladas++;
           break;
       }
     }
     return _ResumoDevolucoes(
+      realizadas: realizadas,
       aguardando: aguardando,
       emTransito: emTransito,
       concluidas: concluidas,
+      canceladas: canceladas,
     );
   }
 }
@@ -329,35 +337,32 @@ class _ResumoCard extends StatelessWidget {
             style: AppTextStyles.subtitulo.copyWith(fontSize: 15),
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _ResumoItem(
-                  valor: resumo.aguardando,
-                  label: 'Aguardando',
-                  imagePath: 'assets/icons/icone_solicitar_sem_cadastro.png',
-                  corFundo: AppColors.amarelo.withValues(alpha: .15),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ResumoItem(
-                  valor: resumo.emTransito,
-                  label: 'Em trânsito',
-                  imagePath: 'assets/icons/em_transito.png',
-                  corFundo: AppColors.azulInstitucional.withValues(alpha: .1),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ResumoItem(
-                  valor: resumo.concluidas,
-                  label: 'Concluídas',
-                  imagePath: 'assets/icons/concluida.png',
-                  corFundo: Colors.green.withValues(alpha: .1),
-                ),
-              ),
-            ],
+          _ResumoItem(
+            valor: resumo.realizadas,
+            label: 'Realizadas',
+            imagePath: 'assets/icons/novo.png',
+            corFundo: AppColors.amarelo.withValues(alpha: .15),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.aguardando,
+            label: 'Em Coleta',
+            imagePath: 'assets/icons/caixa.png',
+            corFundo: AppColors.marron.withValues(alpha: .15),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.emTransito,
+            label: 'Em trânsito',
+            imagePath: 'assets/icons/caminhao-de-carga.png',
+            corFundo: AppColors.azulInstitucional.withValues(alpha: .1),
+          ),
+          const SizedBox(height: 4),
+          _ResumoItem(
+            valor: resumo.concluidas,
+            label: 'Concluídas',
+            imagePath: 'assets/icons/verificar.png',
+            corFundo: Colors.green.withValues(alpha: .1),
           ),
         ],
       ),
@@ -381,34 +386,36 @@ class _ResumoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
+      height: 30,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: corFundo,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Image.asset(
-                imagePath,
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
+          Image.asset(imagePath, width: 50, height: 50, fit: BoxFit.contain),
+          const SizedBox(width: 20),
+          Container(
+            width: 20,
+            child: Text(
+              '$valor',
+              style: AppTextStyles.titulo.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(width: 6),
-              Text(
-                '$valor',
-                style: AppTextStyles.titulo.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+            ),
           ),
-          Text(label, style: AppTextStyles.legenda.copyWith(fontSize: 12)),
+
+          const SizedBox(width: 10),
+          Container(
+            width: 100,
+            child: Text(
+              label,
+              style: AppTextStyles.legenda.copyWith(fontSize: 12),
+            ),
+          ),
         ],
       ),
     );
